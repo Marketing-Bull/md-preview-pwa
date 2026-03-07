@@ -33,6 +33,9 @@ interface AppStore {
   setFindCaseSensitive: (value: boolean) => void
   findRegex: boolean
   setFindRegex: (value: boolean) => void
+
+  // Auto-save
+  lastSaved: Date | null
 }
 
 const STORAGE_KEYS = {
@@ -40,6 +43,9 @@ const STORAGE_KEYS = {
   COLUMN_RATIO: 'md-preview-column-ratio',
   HIGHLIGHT_THEME: 'md-preview-highlight-theme',
   VIEW_MODE: 'md-preview-view-mode',
+  AUTO_SAVE_CONTENT: 'md-preview-autosave-content',
+  AUTO_SAVE_FILENAME: 'md-preview-autosave-filename',
+  AUTO_SAVE_TIME: 'md-preview-autosave-time',
 }
 
 const loadTheme = (): boolean => {
@@ -63,8 +69,35 @@ const loadViewMode = (): ViewMode => {
   return (localStorage.getItem(STORAGE_KEYS.VIEW_MODE) as ViewMode) || 'split'
 }
 
+const loadAutoSavedContent = (): { content: string; fileName: string } | null => {
+  if (typeof window === 'undefined') return null
+  const content = localStorage.getItem(STORAGE_KEYS.AUTO_SAVE_CONTENT)
+  const fileName = localStorage.getItem(STORAGE_KEYS.AUTO_SAVE_FILENAME)
+  const time = localStorage.getItem(STORAGE_KEYS.AUTO_SAVE_TIME)
+  if (content && time) {
+    return { content, fileName: fileName || 'untitled.md' }
+  }
+  return null
+}
+
+// Auto-save interval (5 seconds)
+let autoSaveInterval: ReturnType<typeof setInterval> | null = null
+
+const startAutoSave = () => {
+  if (autoSaveInterval) return
+  autoSaveInterval = setInterval(() => {
+    const state = useStore.getState()
+    localStorage.setItem(STORAGE_KEYS.AUTO_SAVE_CONTENT, state.content)
+    localStorage.setItem(STORAGE_KEYS.AUTO_SAVE_FILENAME, state.fileName)
+    localStorage.setItem(STORAGE_KEYS.AUTO_SAVE_TIME, new Date().toISOString())
+    useStore.setState({ lastSaved: new Date() })
+  }, 5000)
+}
+
+const autoSaved = loadAutoSavedContent()
+
 export const useStore = create<AppStore>((set) => ({
-  content: `# Welcome to MD Preview ⚡
+  content: autoSaved?.content || `# Welcome to MD Preview ⚡
 
 A fast **Markdown + Mermaid** previewer with PDF export.
 
@@ -118,7 +151,7 @@ greet('Alex');
 
   setContent: (content) => set({ content }),
 
-  fileName: 'untitled.md',
+  fileName: autoSaved?.fileName || 'untitled.md',
   setFileName: (name) => set({ fileName: name }),
 
   isDarkMode: loadTheme(),
@@ -160,4 +193,11 @@ greet('Alex');
 
   findRegex: false,
   setFindRegex: (value) => set({ findRegex: value }),
+
+  lastSaved: null,
 }))
+
+// Start auto-save on load
+if (typeof window !== 'undefined') {
+  startAutoSave()
+}

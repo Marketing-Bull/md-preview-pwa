@@ -2,7 +2,7 @@ import React, { useMemo } from 'react'
 import { useStore } from '../store'
 
 export const StatusBar: React.FC = () => {
-  const { content } = useStore()
+  const { content, lastSaved } = useStore()
 
   const stats = useMemo(() => {
     const words = content.trim() ? content.trim().split(/\s+/).length : 0
@@ -24,6 +24,8 @@ export const StatusBar: React.FC = () => {
       <span className="spacer"></span>
       <span>📖 {stats.readingTime} read</span>
       <span>·</span>
+      {lastSaved && <span style={{ opacity: 0.6 }}>💾 saved</span>}
+      {lastSaved && <span>·</span>}
       <span>Markdown + Mermaid + Syntax Highlighting</span>
     </div>
   )
