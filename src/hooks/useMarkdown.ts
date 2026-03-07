@@ -27,36 +27,34 @@ export const useMarkdown = (content: string, isDarkMode: boolean): RenderResult 
     renderTimeoutRef.current = setTimeout(async () => {
       try {
         // Custom renderer for mermaid blocks and code copy buttons
-        const renderer: Partial<Renderer> = {
-          code(token: any) {
-            const { text, lang } = token
-            if (lang === 'mermaid') {
-              return `<div class="mermaid">${text}</div>`
-            }
+        const renderer = new Renderer()
+        
+        renderer.code = function(code: string, infostring?: string, _escaped?: boolean): string {
+          const lang = (infostring || '').match(/^\S*/)?.[0] || ''
+          if (lang === 'mermaid') {
+            return `<div class="mermaid">${code}</div>`
+          }
 
-            const highlighted = lang && hljs.getLanguage(lang)
-              ? hljs.highlight(text, { language: lang }).value
-              : hljs.highlightAuto(text).value
+          const highlighted = lang && hljs.getLanguage(lang)
+            ? hljs.highlight(code, { language: lang }).value
+            : hljs.highlightAuto(code).value
 
-            return `<pre><code class="hljs language-${lang || ''}">${highlighted}</code></pre>`
-          },
+          return `<pre><code class="hljs language-${lang}">${highlighted}</code><button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent)">Copy</button></pre>`
+        }
 
-          listitem(token: any) {
-            const { text, task, checked } = token
-            if (task) {
-              return `<li style="list-style:none;margin-left:-1.5em"><input type="checkbox" disabled ${checked ? 'checked' : ''}>${text}</li>\n`
-            }
-            return `<li>${text}</li>\n`
-          },
+        renderer.listitem = function(text: string, task?: boolean, checked?: boolean): string {
+          if (task) {
+            return `<li style="list-style:none;margin-left:-1.5em"><input type="checkbox" disabled ${checked ? 'checked' : ''}>${text}</li>\n`
+          }
+          return `<li>${text}</li>\n`
         }
 
         // Configure marked with custom renderer and options
         marked.use({
-          renderer: renderer as Renderer,
+          renderer,
           breaks: true,
           gfm: true,
-          async: false,
-        } as any)
+        })
 
         // Initialize mermaid
         mermaid.initialize({
