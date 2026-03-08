@@ -1,4 +1,40 @@
-# MD Preview PWA — Features & Options
+# ⚡ MD Preview
+
+**The markdown editor that works everywhere — no accounts, no cloud, no BS.**
+
+---
+
+## What It Is
+
+MD Preview is a fast, offline-first markdown editor and previewer built as a Progressive Web App. Write markdown on your Mac, preview it on your iPad, export to PDF — all from one tool that runs on your own machine.
+
+## The Problem
+
+Every markdown tool forces a tradeoff:
+
+- **VS Code / Obsidian** — powerful but desktop-only, heavy, can't easily preview on a tablet
+- **HackMD / Notion / Google Docs** — cloud-dependent, requires accounts, owns your data
+- **GitHub preview** — read-only, no editing, no export
+- **Typora** — paid, no mobile support, no Mermaid diagrams without plugins
+- **Browser-based editors** — bloated, slow, no offline, no PWA, terrible on iPad
+
+You just want to write markdown, see it rendered, maybe draw a diagram, and export a clean PDF — without signing up for anything, without an internet connection, and without fighting touch interfaces on a tablet.
+
+## The Solution
+
+MD Preview is a single URL you open in any browser. It:
+
+- **Runs locally** — your files never leave your machine
+- **Works offline** — service worker caches everything, works without Wi-Fi
+- **Installs as an app** — Add to Home Screen on iPad = native app feel, no Safari chrome
+- **Handles everything** — Markdown, Mermaid diagrams, syntax-highlighted code, GFM tables, task lists
+- **Exports clean PDFs** — one click, print-ready, no watermarks
+- **Auto-saves your work** — never lose content, restores on reload
+- **Zero accounts** — no signup, no cloud, no tracking
+
+Built for people who write in markdown and want a tool that stays out of the way.
+
+---
 
 **Version:** 1.1.0 | **Repo:** [Marketing-Bull/md-preview-pwa](https://github.com/Marketing-Bull/md-preview-pwa)
 **URL:** `http://100.66.112.29:8090` | **PM2:** `md-preview` (port 8090)
