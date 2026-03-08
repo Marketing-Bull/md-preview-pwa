@@ -2,18 +2,10 @@ import React, { useEffect, useRef } from 'react'
 import { useMarkdown } from '../hooks/useMarkdown'
 import { useStore } from '../store'
 
-interface PreviewProps {
-  onHeadingsChange: (headings: Array<{ level: number; text: string; id: string }>) => void
-}
-
-export const Preview: React.FC<PreviewProps> = ({ onHeadingsChange }) => {
+export const Preview: React.FC = () => {
   const { content, isDarkMode } = useStore()
-  const { html, headings } = useMarkdown(content, isDarkMode)
+  const { html } = useMarkdown(content, isDarkMode)
   const previewRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    onHeadingsChange(headings)
-  }, [headings, onHeadingsChange])
 
   useEffect(() => {
     if (previewRef.current) {

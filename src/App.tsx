@@ -7,18 +7,12 @@ import { openFile, saveFile, exportPDF, exportHTML } from './utils/fileOperation
 import { Toolbar } from './components/Toolbar'
 import { Editor } from './components/Editor'
 import { Preview } from './components/Preview'
-import { Sidebar } from './components/Sidebar'
+// import { Sidebar } from './components/Sidebar'
 import { FindBar } from './components/FindBar'
 import { StatusBar } from './components/StatusBar'
 import { KeyboardShortcuts } from './components/KeyboardShortcuts'
 import { ColumnResizer } from './components/ColumnResizer'
 import { DropOverlay } from './components/DropOverlay'
-
-interface HeadingInfo {
-  level: number
-  text: string
-  id: string
-}
 
 export const App: React.FC = () => {
   const {
@@ -32,7 +26,7 @@ export const App: React.FC = () => {
     setShowFindBar,
   } = useStore()
 
-  const [headings, setHeadings] = useState<HeadingInfo[]>([])
+
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
 
@@ -196,8 +190,7 @@ export const App: React.FC = () => {
         {viewMode === 'split' && <ColumnResizer />}
 
         <div className="preview-pane">
-          <Preview onHeadingsChange={setHeadings} />
-          <Sidebar headings={headings} />
+          <Preview />
         </div>
       </div>
 
