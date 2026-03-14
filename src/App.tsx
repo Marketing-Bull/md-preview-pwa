@@ -86,6 +86,18 @@ export const App: React.FC = () => {
         e.preventDefault()
         handleCycleViewMode()
       }
+      if (isCmd && e.shiftKey && e.key === 'H') {
+        e.preventDefault()
+        handleExportHTML()
+      }
+      if (isCmd && e.key === 'r') {
+        e.preventDefault()
+        setReadingMode(!readingMode)
+      }
+      if (e.key === '?') {
+        e.preventDefault()
+        setShowShortcuts(!showShortcuts)
+      }
       if (e.key === 'Escape') {
         setShowFindBar(false)
         setShowShortcuts(false)
