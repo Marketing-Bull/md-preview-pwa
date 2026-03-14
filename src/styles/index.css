@@ -158,24 +158,32 @@ body {
   overflow: hidden;
 }
 
-/* View modes */
-body.view-split .preview-pane {
+/* App container */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* View modes — class is on .main-container */
+.main-container.view-split .preview-pane {
   display: flex;
 }
 
-body.view-editor .preview-pane {
+.main-container.view-editor .preview-pane {
   display: none;
 }
 
-body.view-editor .column-resizer {
+.main-container.view-editor .column-resizer {
   display: none;
 }
 
-body.view-preview .editor-pane {
+.main-container.view-preview .editor-pane {
   display: none;
 }
 
-body.view-preview .column-resizer {
+.main-container.view-preview .column-resizer {
   display: none;
 }
 
@@ -298,6 +306,7 @@ body.view-preview .column-resizer {
   line-height: 1.6;
   resize: none;
   outline: none;
+  overflow: auto;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -688,18 +697,14 @@ body.view-preview .column-resizer {
     font-size: 12px;
   }
 
-  body.view-split {
-    --split-ratio: 50%;
-  }
-
-  body.view-split .editor-pane {
+  .main-container.view-split .editor-pane {
     flex: 0 0 auto;
     height: 40vh;
     border-right: none;
     border-bottom: 1px solid var(--border);
   }
 
-  body.view-split .preview-pane {
+  .main-container.view-split .preview-pane {
     flex: 1;
     border-bottom: none;
   }
