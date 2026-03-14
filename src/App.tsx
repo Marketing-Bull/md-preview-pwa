@@ -132,15 +132,20 @@ export const App: React.FC = () => {
   useEffect(() => {
     const handleDragOver = (e: DragEvent) => {
       e.preventDefault()
+      e.stopPropagation()
       setIsDragOver(true)
     }
 
-    const handleDragLeave = () => {
-      setIsDragOver(false)
+    const handleDragLeave = (e: DragEvent) => {
+      // Only reset if leaving the document itself
+      if ((e.target as Document).nodeType === 9) {
+        setIsDragOver(false)
+      }
     }
 
     const handleDrop = async (e: DragEvent) => {
       e.preventDefault()
+      e.stopPropagation()
       setIsDragOver(false)
 
       const files = e.dataTransfer?.files
@@ -162,14 +167,20 @@ export const App: React.FC = () => {
       }
     }
 
+    const handleDragEnd = () => {
+      setIsDragOver(false)
+    }
+
     document.addEventListener('dragover', handleDragOver)
     document.addEventListener('dragleave', handleDragLeave)
     document.addEventListener('drop', handleDrop)
+    document.addEventListener('dragend', handleDragEnd)
 
     return () => {
       document.removeEventListener('dragover', handleDragOver)
       document.removeEventListener('dragleave', handleDragLeave)
       document.removeEventListener('drop', handleDrop)
+      document.removeEventListener('dragend', handleDragEnd)
     }
   }, [setContent, setFileName])
 
