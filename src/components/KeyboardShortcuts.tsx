@@ -14,6 +14,7 @@ const shortcuts = [
   { desc: 'New file', key: 'Cmd+T' },
   { desc: 'Export PDF', key: 'Cmd+P' },
   { desc: 'Export HTML', key: 'Cmd+Shift+H' },
+  { desc: 'Share as URL', key: 'Cmd+Shift+S' },
   { desc: 'Cycle view modes', key: 'Cmd+E' },
   { desc: 'Toggle Reading Mode', key: 'Cmd+R' },
   { desc: 'Close overlay', key: 'Escape' },

@@ -4,6 +4,7 @@ import { useFindReplace } from './hooks/useFindReplace'
 import { useMarkdown } from './hooks/useMarkdown'
 import { useHighlightTheme } from './hooks/useHighlightTheme'
 import { openFile, saveFile, exportPDF, exportHTML } from './utils/fileOperations'
+import { decodeContentFromUrl, shareContent } from './utils/shareUrl'
 
 import { Toolbar } from './components/Toolbar'
 import { Editor } from './components/Editor'
@@ -43,6 +44,15 @@ export const App: React.FC = () => {
 
   // Load highlight.js theme stylesheet
   useHighlightTheme()
+
+  // Load shared content from URL on mount
+  useEffect(() => {
+    const sharedContent = decodeContentFromUrl()
+    if (sharedContent) {
+      setContent(sharedContent)
+      setFileName('shared.md')
+    }
+  }, [])
 
   // Detect mobile mode (≤768px)
   useEffect(() => {
@@ -92,6 +102,10 @@ export const App: React.FC = () => {
         e.preventDefault()
         handleExportHTML()
       }
+      if (isCmd && e.shiftKey && e.key === 'S') {
+        e.preventDefault()
+        handleShare()
+      }
       if (isCmd && e.key === 'r') {
         e.preventDefault()
         setReadingMode(!readingMode)
@@ -112,7 +126,7 @@ export const App: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [showFindBar])
+  }, [showFindBar, readingMode, showShortcuts])
 
   // Handle drag and drop
   useEffect(() => {
@@ -197,6 +211,14 @@ export const App: React.FC = () => {
     useStore.setState({ viewMode: nextMode })
   }
 
+  async function handleShare() {
+    const success = await shareContent(content, fileName || 'document.md')
+    if (success && !navigator.share) {
+      // Copied to clipboard (not using Web Share API)
+      // Could show a toast notification here
+    }
+  }
+
   const handleLoadFile = (content: string, fileName: string) => {
     setContent(content)
     setFileName(fileName)
@@ -213,6 +235,7 @@ export const App: React.FC = () => {
         onShowShortcuts={() => setShowShortcuts(true)}
         onExportPDF={handleExportPDF}
         onToggleReadingMode={() => setReadingMode(!readingMode)}
+        onShare={handleShare}
         readingMode={readingMode}
         fileName={fileName}
         onFileNameChange={setFileName}

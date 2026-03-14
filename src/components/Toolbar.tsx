@@ -11,6 +11,7 @@ interface ToolbarProps {
   onShowShortcuts?: () => void
   onExportPDF?: () => void
   onToggleReadingMode?: () => void
+  onShare?: () => void
   readingMode?: boolean
   fileName: string
   onFileNameChange: (name: string) => void
@@ -25,6 +26,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onShowShortcuts,
   onExportPDF,
   onToggleReadingMode,
+  onShare,
   readingMode,
   fileName,
   onFileNameChange,
@@ -102,6 +104,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       </button>
       <button onClick={onExportHTML} title="Export HTML">
         🌐 HTML
+      </button>
+      <button onClick={onShare} title="Share as URL">
+        🔗 Share
       </button>
     </div>
   )
