@@ -3,8 +3,23 @@ import { create } from 'zustand'
 export type ViewMode = 'split' | 'editor' | 'preview'
 export type HighlightTheme = 'github' | 'github-dark' | 'monokai' | 'dracula' | 'solarized-dark' | 'atom-one-dark' | 'vs-light'
 
+export interface FileData {
+  id: string
+  name: string
+  content: string
+  lastModified: number
+}
+
 interface AppStore {
-  // Content
+  // Multiple files
+  files: Record<string, FileData>
+  activeFileId: string
+  addFile: (name: string, content?: string) => string
+  deleteFile: (id: string) => void
+  setActiveFile: (id: string) => void
+  updateFile: (id: string, name?: string, content?: string) => void
+
+  // Content (shortcuts for current file)
   content: string
   setContent: (content: string) => void
   fileName: string
@@ -60,6 +75,8 @@ const STORAGE_KEYS = {
   FONT_SIZE: 'md-preview-font-size',
   LINE_HEIGHT: 'md-preview-line-height',
   SEPIA: 'md-preview-sepia',
+  FILES: 'md-preview-files',
+  ACTIVE_FILE_ID: 'md-preview-active-file-id',
 }
 
 const loadTheme = (): boolean => {
@@ -114,24 +131,34 @@ const loadSepia = (): boolean => {
   return localStorage.getItem(STORAGE_KEYS.SEPIA) === 'true'
 }
 
-// Auto-save interval (5 seconds)
-let autoSaveInterval: ReturnType<typeof setInterval> | null = null
-
-const startAutoSave = () => {
-  if (autoSaveInterval) return
-  autoSaveInterval = setInterval(() => {
-    const state = useStore.getState()
-    localStorage.setItem(STORAGE_KEYS.AUTO_SAVE_CONTENT, state.content)
-    localStorage.setItem(STORAGE_KEYS.AUTO_SAVE_FILENAME, state.fileName)
-    localStorage.setItem(STORAGE_KEYS.AUTO_SAVE_TIME, new Date().toISOString())
-    useStore.setState({ lastSaved: new Date() })
-  }, 5000)
+const generateFileId = (): string => {
+  return `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
-const autoSaved = loadAutoSavedContent()
+const loadFiles = (): Record<string, FileData> => {
+  if (typeof window === 'undefined') return {}
+  const savedFiles = localStorage.getItem(STORAGE_KEYS.FILES)
+  if (savedFiles) {
+    try {
+      return JSON.parse(savedFiles)
+    } catch {
+      return {}
+    }
+  }
+  return {}
+}
 
-export const useStore = create<AppStore>((set) => ({
-  content: autoSaved?.content || `# Welcome to MD Preview ⚡
+const loadActiveFileId = (): string => {
+  if (typeof window === 'undefined') return ''
+  return localStorage.getItem(STORAGE_KEYS.ACTIVE_FILE_ID) || ''
+}
+
+const createDefaultFile = (): FileData => {
+  const id = generateFileId()
+  return {
+    id,
+    name: 'untitled.md',
+    content: `# Welcome to MD Preview ⚡
 
 A fast **Markdown + Mermaid** previewer with PDF export.
 
@@ -182,11 +209,142 @@ greet('Alex');
 
 > **Tip:** Paste or type any Markdown. Mermaid diagrams render automatically!
 `,
+    lastModified: Date.now(),
+  }
+}
 
-  setContent: (content) => set({ content }),
+// Auto-save interval (5 seconds)
+let autoSaveInterval: ReturnType<typeof setInterval> | null = null
 
-  fileName: autoSaved?.fileName || 'untitled.md',
-  setFileName: (name) => set({ fileName: name }),
+const startAutoSave = () => {
+  if (autoSaveInterval) return
+  autoSaveInterval = setInterval(() => {
+    const state = useStore.getState()
+    localStorage.setItem(STORAGE_KEYS.FILES, JSON.stringify(state.files))
+    localStorage.setItem(STORAGE_KEYS.ACTIVE_FILE_ID, state.activeFileId)
+    localStorage.setItem(STORAGE_KEYS.AUTO_SAVE_TIME, new Date().toISOString())
+    useStore.setState({ lastSaved: new Date() })
+  }, 5000)
+}
+
+// Load files or create default one
+const loadedFiles = loadFiles()
+const loadedActiveFileId = loadActiveFileId()
+let initialFiles = loadedFiles
+let initialActiveFileId = loadedActiveFileId
+
+// Fallback to legacy auto-save if no files exist
+if (Object.keys(initialFiles).length === 0) {
+  const autoSaved = loadAutoSavedContent()
+  const defaultFile = createDefaultFile()
+  if (autoSaved) {
+    defaultFile.name = autoSaved.fileName
+    defaultFile.content = autoSaved.content
+  }
+  initialFiles = { [defaultFile.id]: defaultFile }
+  initialActiveFileId = defaultFile.id
+}
+
+export const useStore = create<AppStore>((set, get) => ({
+  // Multiple files
+  files: initialFiles,
+  activeFileId: initialActiveFileId,
+
+  addFile: (name: string, content?: string) => {
+    const id = generateFileId()
+    const newFile: FileData = {
+      id,
+      name,
+      content: content || '',
+      lastModified: Date.now(),
+    }
+    set((state) => ({
+      files: { ...state.files, [id]: newFile },
+      activeFileId: id,
+    }))
+    return id
+  },
+
+  deleteFile: (id: string) => {
+    set((state) => {
+      const newFiles = { ...state.files }
+      delete newFiles[id]
+      const remainingIds = Object.keys(newFiles)
+      let newActiveId = state.activeFileId
+      if (id === state.activeFileId && remainingIds.length > 0) {
+        newActiveId = remainingIds[0]
+      }
+      return {
+        files: newFiles,
+        activeFileId: newActiveId,
+      }
+    })
+  },
+
+  setActiveFile: (id: string) => {
+    set({ activeFileId: id })
+  },
+
+  updateFile: (id: string, name?: string, content?: string) => {
+    set((state) => {
+      const file = state.files[id]
+      if (!file) return {}
+      return {
+        files: {
+          ...state.files,
+          [id]: {
+            ...file,
+            name: name !== undefined ? name : file.name,
+            content: content !== undefined ? content : file.content,
+            lastModified: Date.now(),
+          },
+        },
+      }
+    })
+  },
+
+  // Content (shortcuts for current file)
+  get content(): string {
+    const state = get()
+    return state.files[state.activeFileId]?.content || ''
+  },
+
+  setContent: (content: string) => {
+    const state = get()
+    if (state.files[state.activeFileId]) {
+      set((s) => ({
+        files: {
+          ...s.files,
+          [s.activeFileId]: {
+            ...s.files[s.activeFileId]!,
+            content,
+            lastModified: Date.now(),
+          },
+        },
+      }))
+    }
+  },
+
+  get fileName(): string {
+    const state = get()
+    return state.files[state.activeFileId]?.name || 'untitled.md'
+  },
+
+  setFileName: (name: string) => {
+    const state = get()
+    if (state.files[state.activeFileId]) {
+      set((s) => ({
+        files: {
+          ...s.files,
+          [s.activeFileId]: {
+            ...s.files[s.activeFileId]!,
+            name,
+            lastModified: Date.now(),
+          },
+        },
+      }))
+    }
+  },
 
   isDarkMode: loadTheme(),
   toggleTheme: () => set((state) => {

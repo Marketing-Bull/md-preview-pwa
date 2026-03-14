@@ -17,6 +17,7 @@ import { DropOverlay } from './components/DropOverlay'
 import { MobileTabBar } from './components/MobileTabBar'
 import { MobileSwipe } from './components/MobileSwipe'
 import { ReadingModeControls } from './components/ReadingModeControls'
+import { TabBar } from './components/TabBar'
 
 export const App: React.FC = () => {
   const {
@@ -33,6 +34,7 @@ export const App: React.FC = () => {
     fontSize,
     lineHeight,
     sepia,
+    addFile,
   } = useStore()
 
   const [isMobile, setIsMobile] = useState(false)
@@ -93,6 +95,10 @@ export const App: React.FC = () => {
       if (isCmd && e.key === 'r') {
         e.preventDefault()
         setReadingMode(!readingMode)
+      }
+      if (isCmd && e.key === 't') {
+        e.preventDefault()
+        addFile('untitled.md')
       }
       if (e.key === '?') {
         e.preventDefault()
@@ -212,6 +218,8 @@ export const App: React.FC = () => {
         onFileNameChange={setFileName}
         onLoadFile={handleLoadFile}
       />
+
+      {!isMobile && <TabBar />}
 
       {readingMode && <ReadingModeControls />}
 

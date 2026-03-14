@@ -11,6 +11,7 @@ const shortcuts = [
   { desc: 'Toggle Dark/Light Mode', key: 'Cmd+D' },
   { desc: 'Save file', key: 'Cmd+S' },
   { desc: 'Open file', key: 'Cmd+O' },
+  { desc: 'New file', key: 'Cmd+T' },
   { desc: 'Export PDF', key: 'Cmd+P' },
   { desc: 'Export HTML', key: 'Cmd+Shift+H' },
   { desc: 'Cycle view modes', key: 'Cmd+E' },
