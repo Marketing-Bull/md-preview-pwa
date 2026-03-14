@@ -645,6 +645,91 @@ body {
   color: var(--text) !important;
 }
 
+/* Mobile tab bar (iPad/touch) */
+.mobile-tab-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 100;
+  gap: 0;
+}
+
+.mobile-tab-bar button {
+  flex: 1;
+  height: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 0;
+  border: none;
+  transition: background 0.2s;
+}
+
+.mobile-tab-bar button:hover {
+  background: var(--surface2);
+  border: none;
+}
+
+.mobile-tab-bar button.active {
+  background: var(--surface2);
+  color: var(--accent);
+  border-bottom: 3px solid var(--accent);
+  font-weight: 600;
+}
+
+/* Main container with swipe support */
+.main-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.main-container.mobile-mode {
+  height: calc(100% - 50px);
+}
+
+.swipe-container {
+  display: flex;
+  width: 300%;
+  height: 100%;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(0);
+}
+
+.swipe-pane {
+  width: 33.333%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.swipe-pane.editor-pane {
+  border-right: none;
+}
+
+.swipe-pane.split-pane {
+  flex-direction: column;
+}
+
+.swipe-pane.preview-pane {
+  border-right: none;
+}
+
 /* Responsive design - Touch devices */
 @media (max-width: 768px) {
   .sidebar {
@@ -708,6 +793,43 @@ body {
     flex: 1;
     border-bottom: none;
   }
+
+  /* Mobile stacked mode */
+  .app.mobile {
+    padding-bottom: 50px;
+  }
+
+  .main-container.mobile-mode {
+    height: calc(100vh - 50px - var(--toolbar-height, 50px) - var(--statusbar-height, 30px));
+  }
+
+  .mobile-tab-bar {
+    display: flex;
+  }
+}
+
+/* Reading mode */
+.reading-mode-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  justify-content: center;
+  align-items: center;
+  background: var(--preview-bg);
+}
+
+.reading-mode-container .preview-pane {
+  max-width: 800px;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  padding: 40px 20px;
+}
+
+.reading-mode-container .preview-content {
+  max-width: 100%;
+  padding: 0;
 }
 
 /* Scrollbar styling */

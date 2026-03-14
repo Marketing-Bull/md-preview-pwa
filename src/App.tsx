@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useStore } from './store'
 import { useFindReplace } from './hooks/useFindReplace'
 import { useMarkdown } from './hooks/useMarkdown'
+import { useHighlightTheme } from './hooks/useHighlightTheme'
 import { openFile, saveFile, exportPDF, exportHTML } from './utils/fileOperations'
 
 import { Toolbar } from './components/Toolbar'
@@ -13,6 +14,9 @@ import { StatusBar } from './components/StatusBar'
 import { KeyboardShortcuts } from './components/KeyboardShortcuts'
 import { ColumnResizer } from './components/ColumnResizer'
 import { DropOverlay } from './components/DropOverlay'
+import { MobileTabBar } from './components/MobileTabBar'
+import { MobileSwipe } from './components/MobileSwipe'
+import { ReadingModeControls } from './components/ReadingModeControls'
 
 export const App: React.FC = () => {
   const {
@@ -24,11 +28,30 @@ export const App: React.FC = () => {
     viewMode,
     showFindBar,
     setShowFindBar,
+    readingMode,
+    setReadingMode,
+    fontSize,
+    lineHeight,
+    sepia,
   } = useStore()
 
-
+  const [isMobile, setIsMobile] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
+
+  // Load highlight.js theme stylesheet
+  useHighlightTheme()
+
+  // Detect mobile mode (≤768px)
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const { html } = useMarkdown(content, isDarkMode)
   const { currentIndex, matchCount, findNext, findPrev, doReplace, doReplaceAll, doFind } = useFindReplace(content)
@@ -156,43 +179,107 @@ export const App: React.FC = () => {
     useStore.setState({ viewMode: nextMode })
   }
 
+  const handleLoadFile = (content: string, fileName: string) => {
+    setContent(content)
+    setFileName(fileName)
+    doFind(content)
+  }
+
   return (
-    <div className={`app ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
+    <div className={`app ${isDarkMode ? 'dark-mode' : 'light-mode'} ${isMobile ? 'mobile' : ''}`}>
       <Toolbar
         onOpen={handleOpen}
         onSave={handleSave}
         onExportHTML={handleExportHTML}
+        onShowFind={() => setShowFindBar(true)}
+        onShowShortcuts={() => setShowShortcuts(true)}
+        onExportPDF={handleExportPDF}
+        onToggleReadingMode={() => setReadingMode(!readingMode)}
+        readingMode={readingMode}
         fileName={fileName}
         onFileNameChange={setFileName}
+        onLoadFile={handleLoadFile}
       />
 
-      <div className={`main-container view-${viewMode}`}>
-        <div className="editor-pane">
-          <Editor
-            onContentChange={(newContent) => {
-              setContent(newContent)
-              doFind(newContent)
-            }}
-          />
-          <FindBar
-            visible={showFindBar}
-            matchCount={matchCount}
-            currentMatch={currentIndex}
-            onClose={() => setShowFindBar(false)}
-            onFind={doFind}
-            onNext={findNext}
-            onPrev={findPrev}
-            onReplace={doReplace}
-            onReplaceAll={doReplaceAll}
-          />
-        </div>
+      {readingMode && <ReadingModeControls />}
 
-        {viewMode === 'split' && <ColumnResizer />}
-
-        <div className="preview-pane">
+      {readingMode ? (
+        <div className="reading-mode-container" style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight, filter: sepia ? 'sepia(0.3)' : 'none' }}>
           <Preview />
         </div>
-      </div>
+      ) : isMobile ? (
+        <>
+          <MobileSwipe>
+            <div className="swipe-pane editor-pane">
+              <Editor
+                onContentChange={(newContent) => {
+                  setContent(newContent)
+                  doFind(newContent)
+                }}
+              />
+              <FindBar
+                visible={showFindBar}
+                matchCount={matchCount}
+                currentMatch={currentIndex}
+                onClose={() => setShowFindBar(false)}
+                onFind={doFind}
+                onNext={findNext}
+                onPrev={findPrev}
+                onReplace={doReplace}
+                onReplaceAll={doReplaceAll}
+              />
+            </div>
+
+            <div className="swipe-pane split-pane">
+              <div className="editor-pane">
+                <Editor
+                  onContentChange={(newContent) => {
+                    setContent(newContent)
+                    doFind(newContent)
+                  }}
+                />
+              </div>
+              <ColumnResizer />
+              <div className="preview-pane">
+                <Preview />
+              </div>
+            </div>
+
+            <div className="swipe-pane preview-pane">
+              <Preview />
+            </div>
+          </MobileSwipe>
+          <MobileTabBar />
+        </>
+      ) : (
+        <div className={`main-container view-${viewMode}`}>
+          <div className="editor-pane">
+            <Editor
+              onContentChange={(newContent) => {
+                setContent(newContent)
+                doFind(newContent)
+              }}
+            />
+            <FindBar
+              visible={showFindBar}
+              matchCount={matchCount}
+              currentMatch={currentIndex}
+              onClose={() => setShowFindBar(false)}
+              onFind={doFind}
+              onNext={findNext}
+              onPrev={findPrev}
+              onReplace={doReplace}
+              onReplaceAll={doReplaceAll}
+            />
+          </div>
+
+          {viewMode === 'split' && <ColumnResizer />}
+
+          <div className="preview-pane">
+            <Preview />
+          </div>
+        </div>
+      )}
 
       <StatusBar />
 

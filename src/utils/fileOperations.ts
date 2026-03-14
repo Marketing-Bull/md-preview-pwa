@@ -1,6 +1,36 @@
 declare const html2pdf: any
 
-export const openFile = (): Promise<{ content: string; fileName: string } | null> => {
+const RECENT_FILES_KEY = 'recent_files_list'
+const MAX_RECENT_FILES = 10
+
+interface RecentFile {
+  name: string
+  handle?: FileSystemFileHandle
+  timestamp: number
+}
+
+const addToRecentFiles = (fileName: string) => {
+  try {
+    const recent: RecentFile[] = JSON.parse(localStorage.getItem(RECENT_FILES_KEY) || '[]')
+    // Remove duplicates
+    const filtered = recent.filter((f) => f.name !== fileName)
+    // Add new file to front
+    const newRecent: RecentFile[] = [{ name: fileName, timestamp: Date.now() }, ...filtered].slice(0, MAX_RECENT_FILES)
+    localStorage.setItem(RECENT_FILES_KEY, JSON.stringify(newRecent))
+  } catch (error) {
+    console.error('Error updating recent files:', error)
+  }
+}
+
+export const getRecentFiles = (): RecentFile[] => {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_FILES_KEY) || '[]')
+  } catch {
+    return []
+  }
+}
+
+const fallbackOpenFile = (): Promise<{ content: string; fileName: string } | null> => {
   return new Promise((resolve) => {
     const input = document.createElement('input')
     input.type = 'file'
@@ -16,6 +46,7 @@ export const openFile = (): Promise<{ content: string; fileName: string } | null
       try {
         const content = await file.text()
         const fileName = file.name
+        addToRecentFiles(fileName)
         resolve({ content, fileName })
       } catch (error) {
         console.error('Error reading file:', error)
@@ -25,6 +56,40 @@ export const openFile = (): Promise<{ content: string; fileName: string } | null
 
     input.click()
   })
+}
+
+export const openFile = async (): Promise<{ content: string; fileName: string } | null> => {
+  // Try File System Access API first
+  if ('showOpenFilePicker' in window) {
+    try {
+      const handles = await (window as any).showOpenFilePicker({
+        types: [
+          {
+            description: 'Markdown & Text Files',
+            accept: { 'text/markdown': ['.md', '.markdown'], 'text/plain': ['.txt'] },
+          },
+        ],
+      })
+
+      if (!handles || handles.length === 0) return null
+
+      const file = await handles[0].getFile()
+      const content = await file.text()
+      const fileName = file.name
+
+      addToRecentFiles(fileName)
+      return { content, fileName }
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        console.error('File System Access API error:', error)
+      }
+      // Fall back to input element
+      return fallbackOpenFile()
+    }
+  } else {
+    // Fallback for browsers without File System Access API
+    return fallbackOpenFile()
+  }
 }
 
 export const saveFile = (content: string, fileName: string) => {

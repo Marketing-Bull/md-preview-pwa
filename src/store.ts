@@ -36,6 +36,16 @@ interface AppStore {
 
   // Auto-save
   lastSaved: Date | null
+
+  // Reading mode
+  readingMode: boolean
+  setReadingMode: (mode: boolean) => void
+  fontSize: number
+  setFontSize: (size: number) => void
+  lineHeight: number
+  setLineHeight: (height: number) => void
+  sepia: boolean
+  setSepia: (enabled: boolean) => void
 }
 
 const STORAGE_KEYS = {
@@ -46,6 +56,10 @@ const STORAGE_KEYS = {
   AUTO_SAVE_CONTENT: 'md-preview-autosave-content',
   AUTO_SAVE_FILENAME: 'md-preview-autosave-filename',
   AUTO_SAVE_TIME: 'md-preview-autosave-time',
+  READING_MODE: 'md-preview-reading-mode',
+  FONT_SIZE: 'md-preview-font-size',
+  LINE_HEIGHT: 'md-preview-line-height',
+  SEPIA: 'md-preview-sepia',
 }
 
 const loadTheme = (): boolean => {
@@ -78,6 +92,26 @@ const loadAutoSavedContent = (): { content: string; fileName: string } | null =>
     return { content, fileName: fileName || 'untitled.md' }
   }
   return null
+}
+
+const loadReadingMode = (): boolean => {
+  if (typeof window === 'undefined') return false
+  return localStorage.getItem(STORAGE_KEYS.READING_MODE) === 'true'
+}
+
+const loadFontSize = (): number => {
+  if (typeof window === 'undefined') return 16
+  return parseInt(localStorage.getItem(STORAGE_KEYS.FONT_SIZE) || '16')
+}
+
+const loadLineHeight = (): number => {
+  if (typeof window === 'undefined') return 1.6
+  return parseFloat(localStorage.getItem(STORAGE_KEYS.LINE_HEIGHT) || '1.6')
+}
+
+const loadSepia = (): boolean => {
+  if (typeof window === 'undefined') return false
+  return localStorage.getItem(STORAGE_KEYS.SEPIA) === 'true'
 }
 
 // Auto-save interval (5 seconds)
@@ -195,6 +229,30 @@ greet('Alex');
   setFindRegex: (value) => set({ findRegex: value }),
 
   lastSaved: null,
+
+  readingMode: loadReadingMode(),
+  setReadingMode: (mode) => {
+    localStorage.setItem(STORAGE_KEYS.READING_MODE, mode ? 'true' : 'false')
+    set({ readingMode: mode })
+  },
+
+  fontSize: loadFontSize(),
+  setFontSize: (size) => {
+    localStorage.setItem(STORAGE_KEYS.FONT_SIZE, size.toString())
+    set({ fontSize: size })
+  },
+
+  lineHeight: loadLineHeight(),
+  setLineHeight: (height) => {
+    localStorage.setItem(STORAGE_KEYS.LINE_HEIGHT, height.toString())
+    set({ lineHeight: height })
+  },
+
+  sepia: loadSepia(),
+  setSepia: (enabled) => {
+    localStorage.setItem(STORAGE_KEYS.SEPIA, enabled ? 'true' : 'false')
+    set({ sepia: enabled })
+  },
 }))
 
 // Start auto-save on load

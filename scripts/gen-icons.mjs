@@ -30,9 +30,31 @@ const generateIcon = async (size) => {
   }
 };
 
+const generateAppleTouchIcon = async (size) => {
+  const outputPath = path.join(publicDir, `apple-touch-icon-${size}.png`);
+
+  try {
+    await sharp(path.join(publicDir, 'icon-512.png'))
+      .resize(size, size)
+      .png()
+      .toFile(outputPath);
+    console.log(`✓ Generated ${outputPath}`);
+  } catch (error) {
+    console.error(`✗ Failed to generate apple-touch-icon-${size}.png:`, error.message);
+    process.exit(1);
+  }
+};
+
 (async () => {
   console.log('Generating app icons...');
   await generateIcon(192);
   await generateIcon(512);
-  console.log('Icons generated successfully!');
+
+  console.log('Generating Apple touch icons...');
+  await generateAppleTouchIcon(120);
+  await generateAppleTouchIcon(152);
+  await generateAppleTouchIcon(167);
+  await generateAppleTouchIcon(180);
+
+  console.log('✓ All icons generated successfully!');
 })();
