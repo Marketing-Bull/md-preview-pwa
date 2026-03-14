@@ -1,5 +1,6 @@
 {
-  "name": "md-preview-pwa",
+  "name": "marketing-bull-markdown-editor",
+  "description": "Fast Markdown + Mermaid previewer with PDF export and dark mode",
   "version": "1.0.0",
   "type": "module",
   "scripts": {

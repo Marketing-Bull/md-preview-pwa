@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'MD Preview',
-        short_name: 'MD Preview',
+        name: 'Marketing Bull Markdown Editor Preview',
+        short_name: 'MB Markdown',
         description: 'Fast Markdown + Mermaid previewer with PDF export',
         theme_color: '#001a33',
         background_color: '#001a33',
@@ -20,14 +20,14 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect fill="%23001a33" width="192" height="192"/><text x="96" y="128" font-size="96" font-weight="bold" text-anchor="middle" fill="%234da6ff" font-family="system-ui">⚡</text></svg>',
+            src: '/icon-192.png',
             sizes: '192x192',
-            type: 'image/svg+xml',
+            type: 'image/png',
           },
           {
-            src: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect fill="%23001a33" width="192" height="192"/><text x="96" y="128" font-size="96" font-weight="bold" text-anchor="middle" fill="%234da6ff" font-family="system-ui">⚡</text></svg>',
+            src: '/icon-512.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'any',
           },
         ],
