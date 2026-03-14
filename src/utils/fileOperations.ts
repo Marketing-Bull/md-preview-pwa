@@ -143,6 +143,11 @@ export const exportPDF = (html: string, fileName: string) => {
   html2pdf().set(opt).from(element).save()
 }
 
+// CSS for syntax highlighting (Atom One Light theme) - embedded to avoid external dependency
+const HIGHLIGHT_CSS = `
+.hljs{color:#383a42;background:#fafafa}.hljs-attr{color:#e45649}.hljs-attr-value{color:#50a14f}.hljs-attr-string{color:#50a14f}.hljs-bold{font-weight:700}.hljs-bullet{color:#4078f2}.hljs-class{color:#c18401}.hljs-code{color:#50a14f}.hljs-comment{color:#a0a1a7;font-style:italic}.hljs-deletion{background-color:#fbe5e5;color:#c91e1e}.hljs-doctag{color:#e45649}.hljs-emphasis{font-style:italic}.hljs-formula{color:#4078f2}.hljs-function .hljs-attr{color:#e45649}.hljs-function .hljs-keyword{color:#a626a4}.hljs-function .hljs-params{color:#383a42}.hljs-function .hljs-punctuation{color:#383a42}.hljs-function .hljs-string{color:#50a14f}.hljs-function .hljs-title{color:#4078f2}.hljs-function-params{color:#383a42}.hljs-highlight{background-color:#ffe69c;color:#383a42}.hljs-insertion{background-color:#e5f1e5;color:#50a14f}.hljs-keyword{color:#a626a4}.hljs-literal{color:#0184bc}.hljs-meta{color:#4078f2}.hljs-meta-keyword{color:#a626a4}.hljs-meta-string{color:#50a14f}.hljs-name{color:#e45649}.hljs-number{color:#986801}.hljs-operator{color:#383a42}.hljs-operator-char{color:#383a42}.hljs-params{color:#383a42}.hljs-property{color:#383a42}.hljs-punctuation{color:#383a42}.hljs-quote{color:#a0a1a7;font-style:italic}.hljs-regexp{color:#0184bc}.hljs-rsl{color:#50a14f}.hljs-selector-attr{color:#e45649}.hljs-selector-class{color:#c18401}.hljs-selector-id{color:#4078f2}.hljs-selector-pseudo{color:#a626a4}.hljs-selector-tag{color:#e45649}.hljs-string{color:#50a14f}.hljs-strong{font-weight:700}.hljs-subst{color:#383a42}.hljs-symbol{color:#e45649}.hljs-tag{color:#e45649}.hljs-tag-attr{color:#e45649}.hljs-tag-name{color:#e45649}.hljs-tag-punctuation{color:#383a42}.hljs-template-string{color:#50a14f}.hljs-title{color:#4078f2}.hljs-type{color:#c18401}.hljs-variable{color:#e45649}
+`
+
 export const exportHTML = (html: string, fileName: string) => {
   const htmlDocument = `<!DOCTYPE html>
 <html lang="en">
@@ -151,6 +156,14 @@ export const exportHTML = (html: string, fileName: string) => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${fileName}</title>
   <style>
+    /* Syntax highlighting (Atom One Light) */
+    ${HIGHLIGHT_CSS}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"><\/script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: system-ui, -apple-system, sans-serif;
       line-height: 1.6;
@@ -161,14 +174,28 @@ export const exportHTML = (html: string, fileName: string) => {
       background: #fff;
     }
     h1, h2, h3, h4, h5, h6 {
-      margin-top: 0.5em;
-      margin-bottom: 0.5em;
+      margin-top: 1.2em;
+      margin-bottom: 0.6em;
+      font-weight: 600;
+    }
+    h1 {
+      font-size: 2em;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 0.3em;
+    }
+    h2 {
+      font-size: 1.6em;
+    }
+    h3 {
+      font-size: 1.3em;
     }
     pre {
       background: #f5f5f5;
+      border: 1px solid #e0e0e0;
       padding: 12px;
-      border-radius: 4px;
+      border-radius: 6px;
       overflow: auto;
+      line-height: 1.4;
     }
     code {
       font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
@@ -177,34 +204,50 @@ export const exportHTML = (html: string, fileName: string) => {
     pre code {
       background: none;
       padding: 0;
+      color: inherit;
+    }
+    p code {
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 3px;
     }
     blockquote {
-      border-left: 4px solid #ddd;
-      margin: 0;
+      border-left: 4px solid #4da6ff;
+      margin: 1em 0;
       padding-left: 16px;
       color: #666;
+      font-style: italic;
     }
     table {
       border-collapse: collapse;
       width: 100%;
-      margin: 1em 0;
+      margin: 1.5em 0;
+      border: 1px solid #ddd;
     }
     th, td {
       border: 1px solid #ddd;
-      padding: 8px 12px;
+      padding: 12px;
       text-align: left;
     }
     th {
       background: #f9f9f9;
       font-weight: bold;
+      border-bottom: 2px solid #ddd;
+    }
+    tr:nth-child(even) {
+      background: #fafafa;
     }
     img {
       max-width: 100%;
       height: auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      margin: 1em 0;
     }
     a {
       color: #0066cc;
       text-decoration: none;
+      border-bottom: 1px dotted #0066cc;
     }
     a:hover {
       text-decoration: underline;
@@ -212,12 +255,49 @@ export const exportHTML = (html: string, fileName: string) => {
     .mermaid {
       display: flex;
       justify-content: center;
+      margin: 1.5em 0;
+    }
+    ul, ol {
       margin: 1em 0;
+      padding-left: 2em;
+    }
+    li {
+      margin: 0.5em 0;
+    }
+    strong {
+      font-weight: 600;
+    }
+    em {
+      font-style: italic;
+    }
+    hr {
+      border: none;
+      border-top: 2px solid #e0e0e0;
+      margin: 2em 0;
+    }
+    /* Print styles */
+    @media print {
+      body {
+        max-width: 100%;
+        padding: 0;
+      }
+      a {
+        border-bottom: none;
+      }
+      a[href]:after {
+        content: " (" attr(href) ")";
+        font-size: 0.8em;
+      }
     }
   </style>
 </head>
 <body>
   ${html}
+  <script>
+    // Initialize Mermaid diagrams
+    mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    mermaid.contentLoaded();
+  </script>
 </body>
 </html>`
 
