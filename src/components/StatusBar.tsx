@@ -13,7 +13,11 @@ export const StatusBar: React.FC = () => {
     const readingTimeMinutes = Math.ceil(words / 200)
     const readingTime = readingTimeMinutes === 0 ? '< 1 min' : `${readingTimeMinutes} min`
 
-    return { words, chars, lines, readingTime }
+    // Approximate token count (~4 chars per token)
+    const tokens = Math.round(chars / 4)
+    const tokenDisplay = tokens >= 1000 ? `~${(tokens / 1000).toFixed(1)}k` : `~${tokens}`
+
+    return { words, chars, lines, readingTime, tokenDisplay }
   }, [content])
 
   return (
@@ -22,7 +26,7 @@ export const StatusBar: React.FC = () => {
         {stats.words} words · {stats.chars} chars · {stats.lines} lines
       </span>
       <span className="spacer"></span>
-      <span>📖 {stats.readingTime} read</span>
+      <span>📖 {stats.readingTime} read · {stats.tokenDisplay} tokens</span>
       <span>·</span>
       {lastSaved && <span style={{ opacity: 0.6 }}>💾 saved</span>}
       {lastSaved && <span>·</span>}
