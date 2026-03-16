@@ -58,7 +58,7 @@ const fallbackOpenFile = (): Promise<{ content: string; fileName: string } | nul
   })
 }
 
-export const openFile = async (): Promise<{ content: string; fileName: string } | null> => {
+export const openFile = async (): Promise<{ content: string; fileName: string; handle?: FileSystemFileHandle } | null> => {
   // Try File System Access API first
   if ('showOpenFilePicker' in window) {
     try {
@@ -73,21 +73,21 @@ export const openFile = async (): Promise<{ content: string; fileName: string } 
 
       if (!handles || handles.length === 0) return null
 
-      const file = await handles[0].getFile()
+      const handle = handles[0] as FileSystemFileHandle
+      const file = await handle.getFile()
       const content = await file.text()
       const fileName = file.name
 
       addToRecentFiles(fileName)
-      return { content, fileName }
+      return { content, fileName, handle }
     } catch (error) {
-      if ((error as Error).name !== 'AbortError') {
-        console.error('File System Access API error:', error)
-      }
-      // Fall back to input element
+      // User cancelled the picker — don't fall through to the legacy picker
+      if ((error as Error).name === 'AbortError') return null
+      console.error('File System Access API error:', error)
       return fallbackOpenFile()
     }
   } else {
-    // Fallback for browsers without File System Access API
+    // Fallback for browsers without File System Access API (Safari, iPad)
     return fallbackOpenFile()
   }
 }

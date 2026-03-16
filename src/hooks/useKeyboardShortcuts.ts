@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 interface Shortcuts {
   openFile: () => void
   saveFile: () => void
+  saveFileAs: () => void
   toggleTheme: () => void
   toggleFindBar: () => void
   exportPDF: () => void
@@ -30,12 +31,12 @@ export const useKeyboardShortcuts = (shortcuts: Shortcuts) => {
       // Cmd/Ctrl shortcuts work everywhere (they don't conflict with typing)
       if (isCmdOrCtrl && e.key === 'f') { e.preventDefault(); shortcuts.toggleFindBar(); return }
       if (isCmdOrCtrl && e.key === 'd') { e.preventDefault(); shortcuts.toggleTheme(); return }
+      if (isCmdOrCtrl && e.shiftKey && e.key === 'S') { e.preventDefault(); shortcuts.saveFileAs(); return }
       if (isCmdOrCtrl && e.key === 's') { e.preventDefault(); shortcuts.saveFile(); return }
       if (isCmdOrCtrl && e.key === 'o') { e.preventDefault(); shortcuts.openFile(); return }
       if (isCmdOrCtrl && e.key === 'p') { e.preventDefault(); shortcuts.exportPDF(); return }
       if (isCmdOrCtrl && e.key === 'e') { e.preventDefault(); shortcuts.cycleViewMode(); return }
       if (isCmdOrCtrl && e.shiftKey && e.key === 'H') { e.preventDefault(); shortcuts.exportHTML(); return }
-      if (isCmdOrCtrl && e.shiftKey && e.key === 'S') { e.preventDefault(); shortcuts.share(); return }
       if (isCmdOrCtrl && e.key === 'r') { e.preventDefault(); shortcuts.toggleReadingMode(); return }
       if (isCmdOrCtrl && e.key === 't') { e.preventDefault(); shortcuts.addTab(); return }
 

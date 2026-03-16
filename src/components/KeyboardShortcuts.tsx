@@ -5,20 +5,23 @@ interface KeyboardShortcutsProps {
   onClose: () => void
 }
 
+const isMac = typeof navigator !== 'undefined' && /Mac|iPad|iPhone/.test(navigator.userAgent)
+const mod = isMac ? '⌘' : 'Ctrl+'
+
 const shortcuts = [
   { desc: 'Open this menu', key: '?' },
-  { desc: 'Find & Replace', key: 'Cmd+F' },
-  { desc: 'Bold', key: 'Cmd+B' },
-  { desc: 'Italic', key: 'Cmd+I' },
-  { desc: 'Toggle Dark/Light Mode', key: 'Cmd+D' },
-  { desc: 'Save file (Save As)', key: 'Cmd+S' },
-  { desc: 'Open file', key: 'Cmd+O' },
-  { desc: 'New tab', key: 'Cmd+T' },
-  { desc: 'Export PDF', key: 'Cmd+P' },
-  { desc: 'Export HTML', key: 'Cmd+Shift+H' },
-  { desc: 'Share as URL', key: 'Cmd+Shift+S' },
-  { desc: 'Cycle view modes', key: 'Cmd+E' },
-  { desc: 'Toggle Reading Mode', key: 'Cmd+R' },
+  { desc: 'Find & Replace', key: `${mod}F` },
+  { desc: 'Bold', key: `${mod}B` },
+  { desc: 'Italic', key: `${mod}I` },
+  { desc: 'Toggle Dark/Light Mode', key: `${mod}D` },
+  { desc: 'Save', key: `${mod}S` },
+  { desc: 'Save As...', key: `⇧${mod}S` },
+  { desc: 'Open file', key: `${mod}O` },
+  { desc: 'New tab', key: `${mod}T` },
+  { desc: 'Export PDF', key: `${mod}P` },
+  { desc: 'Export HTML', key: `⇧${mod}H` },
+  { desc: 'Cycle view modes', key: `${mod}E` },
+  { desc: 'Toggle Reading Mode', key: `${mod}R` },
   { desc: 'Close overlay', key: 'Escape' },
 ]
 

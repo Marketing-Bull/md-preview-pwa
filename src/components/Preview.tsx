@@ -37,28 +37,35 @@ export const Preview: React.FC = () => {
   }, [])
 
   // Scroll sync: editor ↔ preview (proportional)
+  // Uses a timer to hold the sync-lock long enough for the browser to fire
+  // the programmatic scroll event on the target pane before we unlock,
+  // preventing an infinite feedback loop.
   useEffect(() => {
     const editor = document.querySelector<HTMLTextAreaElement>('textarea.editor')
     const preview = scrollRef.current
     if (!editor || !preview) return
 
-    let syncingFromEditor = false
-    let syncingFromPreview = false
+    let syncingFromEditor = 0
+    let syncingFromPreview = 0
 
     const onEditorScroll = () => {
       if (syncingFromPreview) return
-      const ratio = editor.scrollTop / Math.max(1, editor.scrollHeight - editor.clientHeight)
-      syncingFromEditor = true
+      const maxScroll = editor.scrollHeight - editor.clientHeight
+      if (maxScroll <= 0) return
+      const ratio = editor.scrollTop / maxScroll
+      clearTimeout(syncingFromEditor)
+      syncingFromEditor = window.setTimeout(() => { syncingFromEditor = 0 }, 80)
       preview.scrollTop = ratio * Math.max(0, preview.scrollHeight - preview.clientHeight)
-      requestAnimationFrame(() => { syncingFromEditor = false })
     }
 
     const onPreviewScroll = () => {
       if (syncingFromEditor) return
-      const ratio = preview.scrollTop / Math.max(1, preview.scrollHeight - preview.clientHeight)
-      syncingFromPreview = true
+      const maxScroll = preview.scrollHeight - preview.clientHeight
+      if (maxScroll <= 0) return
+      const ratio = preview.scrollTop / maxScroll
+      clearTimeout(syncingFromPreview)
+      syncingFromPreview = window.setTimeout(() => { syncingFromPreview = 0 }, 80)
       editor.scrollTop = ratio * Math.max(0, editor.scrollHeight - editor.clientHeight)
-      requestAnimationFrame(() => { syncingFromPreview = false })
     }
 
     editor.addEventListener('scroll', onEditorScroll, { passive: true })
@@ -66,6 +73,8 @@ export const Preview: React.FC = () => {
     return () => {
       editor.removeEventListener('scroll', onEditorScroll)
       preview.removeEventListener('scroll', onPreviewScroll)
+      clearTimeout(syncingFromEditor)
+      clearTimeout(syncingFromPreview)
     }
   }, [])
 

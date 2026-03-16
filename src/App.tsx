@@ -40,6 +40,8 @@ export const App: React.FC = () => {
     sepia,
     addFile,
     columnRatio,
+    fileHandle,
+    setFileHandle,
   } = useStore()
 
   const [isMobile, setIsMobile] = useState(false)
@@ -87,6 +89,7 @@ export const App: React.FC = () => {
   useKeyboardShortcuts({
     openFile: handleOpen,
     saveFile: handleSave,
+    saveFileAs: handleSaveAs,
     toggleTheme: () => useStore.setState((s) => ({ isDarkMode: !s.isDarkMode })),
     toggleFindBar: () => setShowFindBar(!showFindBar),
     exportPDF: handleExportPDF,
@@ -115,10 +118,27 @@ export const App: React.FC = () => {
     if (result) {
       setContent(result.content)
       setFileName(result.fileName)
+      setFileHandle(result.handle ?? null)
     }
   }
 
+  /** Write to the existing file handle, or fall back to Save As. */
   async function handleSave() {
+    if (fileHandle) {
+      try {
+        const writable = await fileHandle.createWritable()
+        await writable.write(content)
+        await writable.close()
+        return
+      } catch {
+        // Handle was revoked or permissions lost — fall through to Save As
+      }
+    }
+    await handleSaveAs()
+  }
+
+  /** Always prompt for a new file location. */
+  async function handleSaveAs() {
     const name = fileName || 'document.md'
     if ('showSaveFilePicker' in window) {
       try {
@@ -130,6 +150,7 @@ export const App: React.FC = () => {
         await writable.write(content)
         await writable.close()
         setFileName(handle.name)
+        setFileHandle(handle)
         return
       } catch (e) {
         if ((e as Error).name === 'AbortError') return
@@ -167,6 +188,7 @@ export const App: React.FC = () => {
         onNew={() => addFile('untitled.md')}
         onOpen={handleOpen}
         onSave={handleSave}
+        onSaveAs={handleSaveAs}
         onExportHTML={handleExportHTML}
         onExportPDF={handleExportPDF}
         onShare={handleShare}
