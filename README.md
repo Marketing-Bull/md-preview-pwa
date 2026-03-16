@@ -2,6 +2,8 @@
 
 **A fast, offline-first Markdown + Mermaid editor. No accounts, no cloud, no tracking.**
 
+**Live demo:** [md.getmarketingbull.com](https://md.getmarketingbull.com)
+
 Write markdown, see it rendered live, validate JSON, draw diagrams, and export clean PDFs — all from one tool that runs entirely in your browser.
 
 ---
