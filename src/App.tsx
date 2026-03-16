@@ -116,8 +116,24 @@ export const App: React.FC = () => {
     }
   }
 
-  function handleSave() {
-    saveFile(content, fileName || 'document.md')
+  async function handleSave() {
+    const name = fileName || 'document.md'
+    if ('showSaveFilePicker' in window) {
+      try {
+        const handle = await (window as Window & typeof globalThis & { showSaveFilePicker: (opts: object) => Promise<FileSystemFileHandle> }).showSaveFilePicker({
+          suggestedName: name,
+          types: [{ description: 'Markdown', accept: { 'text/markdown': ['.md', '.markdown'] } }],
+        })
+        const writable = await handle.createWritable()
+        await writable.write(content)
+        await writable.close()
+        setFileName(handle.name)
+        return
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return
+      }
+    }
+    saveFile(content, name)
   }
 
   function handleExportPDF() {
