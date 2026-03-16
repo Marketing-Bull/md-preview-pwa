@@ -15,6 +15,7 @@ import { Preview } from './components/Preview'
 import { FindBar } from './components/FindBar'
 import { StatusBar } from './components/StatusBar'
 import { KeyboardShortcuts } from './components/KeyboardShortcuts'
+import { InstallGuide } from './components/InstallGuide'
 import { ColumnResizer } from './components/ColumnResizer'
 import { DropOverlay } from './components/DropOverlay'
 import { MobileTabBar } from './components/MobileTabBar'
@@ -43,6 +44,7 @@ export const App: React.FC = () => {
 
   const [isMobile, setIsMobile] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
+  const [showInstallGuide, setShowInstallGuide] = useState(false)
 
   // Sync theme class to body so body background and legacy selectors update
   useEffect(() => {
@@ -170,6 +172,7 @@ export const App: React.FC = () => {
         onShare={handleShare}
         onShowFind={() => setShowFindBar(true)}
         onShowShortcuts={() => setShowShortcuts(true)}
+        onShowInstallGuide={() => setShowInstallGuide(true)}
         onToggleReadingMode={() => setReadingMode(!readingMode)}
         readingMode={readingMode}
         fileName={fileName}
@@ -267,6 +270,7 @@ export const App: React.FC = () => {
       <StatusBar />
 
       <KeyboardShortcuts visible={showShortcuts} onClose={() => setShowShortcuts(false)} />
+      <InstallGuide visible={showInstallGuide} onClose={() => setShowInstallGuide(false)} />
 
       <DropOverlay visible={isDragOver} />
     </div>
