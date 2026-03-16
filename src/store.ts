@@ -87,7 +87,9 @@ const loadTheme = (): boolean => {
 const loadColumnRatio = (): number => {
   if (typeof window === 'undefined') return 1
   const saved = localStorage.getItem(STORAGE_KEYS.COLUMN_RATIO)
-  return saved ? parseFloat(saved) : 1
+  if (!saved) return 0.5
+  const v = parseFloat(saved)
+  return v >= 0.2 && v <= 0.8 ? v : 0.5
 }
 
 const loadHighlightTheme = (): HighlightTheme => {
@@ -158,9 +160,9 @@ const createDefaultFile = (): FileData => {
   return {
     id,
     name: 'untitled.md',
-    content: `# Welcome to MD Preview ⚡
+    content: `# Markdown Editor & Preview by Marketing Bull
 
-A fast **Markdown + Mermaid** previewer with PDF export.
+A fast **Markdown + Mermaid** previewer + JSON Syntax Validator with Export.
 
 ## Features
 
@@ -170,6 +172,8 @@ A fast **Markdown + Mermaid** previewer with PDF export.
 - ✅ Export to **PDF** or **HTML**
 - ✅ Drag & drop \`.md\` files
 - ✅ GFM tables, task lists, blockquotes
+- ✅ JSON & JSON5 validation (paste JSON to auto-detect)
+- ✅ All data stored locally in your browser — nothing sent to any server
 
 ## Example Table
 
@@ -215,11 +219,15 @@ greet('Alex');
 
 // Auto-save interval (5 seconds)
 let autoSaveInterval: ReturnType<typeof setInterval> | null = null
+let lastSavedSnapshot = ''
 
 const startAutoSave = () => {
   if (autoSaveInterval) return
   autoSaveInterval = setInterval(() => {
     const state = useStore.getState()
+    const snapshot = JSON.stringify(state.files) + state.activeFileId
+    if (snapshot === lastSavedSnapshot) return
+    lastSavedSnapshot = snapshot
     localStorage.setItem(STORAGE_KEYS.FILES, JSON.stringify(state.files))
     localStorage.setItem(STORAGE_KEYS.ACTIVE_FILE_ID, state.activeFileId)
     localStorage.setItem(STORAGE_KEYS.AUTO_SAVE_TIME, new Date().toISOString())
@@ -245,6 +253,8 @@ if (Object.keys(initialFiles).length === 0) {
   initialActiveFileId = defaultFile.id
 }
 
+const initialActiveFile = initialFiles[initialActiveFileId]
+
 export const useStore = create<AppStore>((set, get) => ({
   // Multiple files
   files: initialFiles,
@@ -252,15 +262,13 @@ export const useStore = create<AppStore>((set, get) => ({
 
   addFile: (name: string, content?: string) => {
     const id = generateFileId()
-    const newFile: FileData = {
-      id,
-      name,
-      content: content || '',
-      lastModified: Date.now(),
-    }
+    const fileContent = content || ''
+    const newFile: FileData = { id, name, content: fileContent, lastModified: Date.now() }
     set((state) => ({
       files: { ...state.files, [id]: newFile },
       activeFileId: id,
+      content: fileContent,
+      fileName: name,
     }))
     return id
   },
@@ -274,76 +282,71 @@ export const useStore = create<AppStore>((set, get) => ({
       if (id === state.activeFileId && remainingIds.length > 0) {
         newActiveId = remainingIds[0]
       }
+      const newActive = newFiles[newActiveId]
       return {
         files: newFiles,
         activeFileId: newActiveId,
+        content: newActive?.content || '',
+        fileName: newActive?.name || 'untitled.md',
       }
     })
   },
 
   setActiveFile: (id: string) => {
-    set({ activeFileId: id })
+    set((state) => ({
+      activeFileId: id,
+      content: state.files[id]?.content || '',
+      fileName: state.files[id]?.name || 'untitled.md',
+    }))
   },
 
   updateFile: (id: string, name?: string, content?: string) => {
     set((state) => {
       const file = state.files[id]
       if (!file) return {}
+      const updatedFile = {
+        ...file,
+        name: name !== undefined ? name : file.name,
+        content: content !== undefined ? content : file.content,
+        lastModified: Date.now(),
+      }
+      const isActive = id === state.activeFileId
       return {
+        files: { ...state.files, [id]: updatedFile },
+        ...(isActive && { content: updatedFile.content, fileName: updatedFile.name }),
+      }
+    })
+  },
+
+  // Content shortcuts for current file — plain state, not getters
+  content: initialActiveFile?.content || '',
+
+  setContent: (content: string) => {
+    set((s) => {
+      if (!s.files[s.activeFileId]) return {}
+      return {
+        content,
         files: {
-          ...state.files,
-          [id]: {
-            ...file,
-            name: name !== undefined ? name : file.name,
-            content: content !== undefined ? content : file.content,
-            lastModified: Date.now(),
-          },
+          ...s.files,
+          [s.activeFileId]: { ...s.files[s.activeFileId]!, content, lastModified: Date.now() },
         },
       }
     })
   },
 
-  // Content (shortcuts for current file)
-  get content(): string {
-    const state = get()
-    return state.files[state.activeFileId]?.content || ''
-  },
-
-  setContent: (content: string) => {
-    const state = get()
-    if (state.files[state.activeFileId]) {
-      set((s) => ({
-        files: {
-          ...s.files,
-          [s.activeFileId]: {
-            ...s.files[s.activeFileId]!,
-            content,
-            lastModified: Date.now(),
-          },
-        },
-      }))
-    }
-  },
-
-  get fileName(): string {
-    const state = get()
-    return state.files[state.activeFileId]?.name || 'untitled.md'
-  },
+  fileName: initialActiveFile?.name || 'untitled.md',
 
   setFileName: (name: string) => {
-    const state = get()
-    if (state.files[state.activeFileId]) {
-      set((s) => ({
+    set((s) => {
+      if (!s.files[s.activeFileId]) return {}
+      return {
+        fileName: name,
         files: {
           ...s.files,
-          [s.activeFileId]: {
-            ...s.files[s.activeFileId]!,
-            name,
-            lastModified: Date.now(),
-          },
+          [s.activeFileId]: { ...s.files[s.activeFileId]!, name, lastModified: Date.now() },
         },
-      }))
-    }
+      }
+    })
   },
 
   isDarkMode: loadTheme(),

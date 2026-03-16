@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react'
 import { useStore } from '../store'
 
 export const ColumnResizer: React.FC = () => {
-  const { columnRatio, setColumnRatio } = useStore()
+  const { setColumnRatio } = useStore()
   const isDraggingRef = useRef(false)
 
   useEffect(() => {
@@ -41,9 +41,6 @@ export const ColumnResizer: React.FC = () => {
     <div
       className="column-resizer"
       onMouseDown={handleMouseDown}
-      style={{
-        left: `${columnRatio * 100}%`,
-      }}
     />
   )
 }

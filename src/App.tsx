@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useStore } from './store'
 import { useFindReplace } from './hooks/useFindReplace'
 import { useMarkdown } from './hooks/useMarkdown'
 import { useHighlightTheme } from './hooks/useHighlightTheme'
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
+import { useDragDrop } from './hooks/useDragDrop'
 import { openFile, saveFile, exportPDF, exportHTML } from './utils/fileOperations'
 import { decodeContentFromUrl, shareContent } from './utils/shareUrl'
 
@@ -36,11 +38,17 @@ export const App: React.FC = () => {
     lineHeight,
     sepia,
     addFile,
+    columnRatio,
   } = useStore()
 
   const [isMobile, setIsMobile] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
-  const [isDragOver, setIsDragOver] = useState(false)
+
+  // Sync theme class to body so body background and legacy selectors update
+  useEffect(() => {
+    document.body.classList.toggle('light-mode', !isDarkMode)
+    document.body.classList.toggle('dark-mode', isDarkMode)
+  }, [isDarkMode])
 
   // Load highlight.js theme stylesheet
   useHighlightTheme()
@@ -54,135 +62,40 @@ export const App: React.FC = () => {
     }
   }, [])
 
-  // Detect mobile mode (≤768px)
+  // Detect mobile mode (≤768px) — debounced to avoid losing editor content on rapid resize
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768)
-    }
-
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768)
     checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
+    let timer: ReturnType<typeof setTimeout>
+    const onResize = () => { clearTimeout(timer); timer = setTimeout(checkMobile, 150) }
+    window.addEventListener('resize', onResize)
+    return () => { window.removeEventListener('resize', onResize); clearTimeout(timer) }
   }, [])
 
   const { html } = useMarkdown(content, isDarkMode)
   const { currentIndex, matchCount, findNext, findPrev, doReplace, doReplaceAll, doFind } = useFindReplace(content)
 
-  // Register keyboard shortcuts (just used for side effects)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
-      const isCmd = isMac ? e.metaKey : e.ctrlKey
+  const isDragOver = useDragDrop({
+    onFileDrop: useCallback((text: string, name: string) => {
+      setContent(text)
+      setFileName(name)
+    }, [setContent, setFileName]),
+  })
 
-      if (isCmd && e.key === 'f') {
-        e.preventDefault()
-        setShowFindBar(!showFindBar)
-      }
-      if (isCmd && e.key === 'd') {
-        e.preventDefault()
-        useStore.setState((state) => ({ isDarkMode: !state.isDarkMode }))
-      }
-      if (isCmd && e.key === 's') {
-        e.preventDefault()
-        handleSave()
-      }
-      if (isCmd && e.key === 'o') {
-        e.preventDefault()
-        handleOpen()
-      }
-      if (isCmd && e.key === 'p') {
-        e.preventDefault()
-        handleExportPDF()
-      }
-      if (isCmd && e.key === 'e') {
-        e.preventDefault()
-        handleCycleViewMode()
-      }
-      if (isCmd && e.shiftKey && e.key === 'H') {
-        e.preventDefault()
-        handleExportHTML()
-      }
-      if (isCmd && e.shiftKey && e.key === 'S') {
-        e.preventDefault()
-        handleShare()
-      }
-      if (isCmd && e.key === 'r') {
-        e.preventDefault()
-        setReadingMode(!readingMode)
-      }
-      if (isCmd && e.key === 't') {
-        e.preventDefault()
-        addFile('untitled.md')
-      }
-      if (e.key === '?') {
-        e.preventDefault()
-        setShowShortcuts(!showShortcuts)
-      }
-      if (e.key === 'Escape') {
-        setShowFindBar(false)
-        setShowShortcuts(false)
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [showFindBar, readingMode, showShortcuts])
-
-  // Handle drag and drop
-  useEffect(() => {
-    const handleDragOver = (e: DragEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-      setIsDragOver(true)
-    }
-
-    const handleDragLeave = (e: DragEvent) => {
-      // Only reset if leaving the document itself
-      if ((e.target as Document).nodeType === 9) {
-        setIsDragOver(false)
-      }
-    }
-
-    const handleDrop = async (e: DragEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-      setIsDragOver(false)
-
-      const files = e.dataTransfer?.files
-      if (!files || files.length === 0) return
-
-      const file = files[0]
-      if (!file.type.includes('text') && !file.name.endsWith('.md') && !file.name.endsWith('.markdown')) {
-        alert('Please drop a markdown or text file')
-        return
-      }
-
-      try {
-        const text = await file.text()
-        setContent(text)
-        setFileName(file.name)
-      } catch (error) {
-        console.error('Error reading dropped file:', error)
-        alert('Error reading file')
-      }
-    }
-
-    const handleDragEnd = () => {
-      setIsDragOver(false)
-    }
-
-    document.addEventListener('dragover', handleDragOver)
-    document.addEventListener('dragleave', handleDragLeave)
-    document.addEventListener('drop', handleDrop)
-    document.addEventListener('dragend', handleDragEnd)
-
-    return () => {
-      document.removeEventListener('dragover', handleDragOver)
-      document.removeEventListener('dragleave', handleDragLeave)
-      document.removeEventListener('drop', handleDrop)
-      document.removeEventListener('dragend', handleDragEnd)
-    }
-  }, [setContent, setFileName])
+  useKeyboardShortcuts({
+    openFile: handleOpen,
+    saveFile: handleSave,
+    toggleTheme: () => useStore.setState((s) => ({ isDarkMode: !s.isDarkMode })),
+    toggleFindBar: () => setShowFindBar(!showFindBar),
+    exportPDF: handleExportPDF,
+    exportHTML: handleExportHTML,
+    cycleViewMode: handleCycleViewMode,
+    share: handleShare,
+    toggleReadingMode: () => setReadingMode(!readingMode),
+    addTab: () => addFile('untitled.md'),
+    toggleShortcuts: () => setShowShortcuts(!showShortcuts),
+    closeModal: () => { setShowFindBar(false); setShowShortcuts(false) },
+  })
 
   // Register service worker for PWA
   useEffect(() => {
@@ -230,27 +143,21 @@ export const App: React.FC = () => {
     }
   }
 
-  const handleLoadFile = (content: string, fileName: string) => {
-    setContent(content)
-    setFileName(fileName)
-    doFind(content)
-  }
-
   return (
     <div className={`app ${isDarkMode ? 'dark-mode' : 'light-mode'} ${isMobile ? 'mobile' : ''}`}>
       <Toolbar
+        onNew={() => addFile('untitled.md')}
         onOpen={handleOpen}
         onSave={handleSave}
         onExportHTML={handleExportHTML}
+        onExportPDF={handleExportPDF}
+        onShare={handleShare}
         onShowFind={() => setShowFindBar(true)}
         onShowShortcuts={() => setShowShortcuts(true)}
-        onExportPDF={handleExportPDF}
         onToggleReadingMode={() => setReadingMode(!readingMode)}
-        onShare={handleShare}
         readingMode={readingMode}
         fileName={fileName}
         onFileNameChange={setFileName}
-        onLoadFile={handleLoadFile}
       />
 
       {!isMobile && <TabBar />}
@@ -307,7 +214,10 @@ export const App: React.FC = () => {
         </>
       ) : (
         <div className={`main-container view-${viewMode}`}>
-          <div className="editor-pane">
+          <div
+            className="editor-pane"
+            style={viewMode === 'split' ? { flex: `0 0 ${columnRatio * 100}%` } : undefined}
+          >
             <Editor
               onContentChange={(newContent) => {
                 setContent(newContent)
@@ -329,7 +239,10 @@ export const App: React.FC = () => {
 
           {viewMode === 'split' && <ColumnResizer />}
 
-          <div className="preview-pane">
+          <div
+            className="preview-pane"
+            style={viewMode === 'split' ? { flex: `0 0 ${(1 - columnRatio) * 100}%` } : undefined}
+          >
             <Preview />
           </div>
         </div>

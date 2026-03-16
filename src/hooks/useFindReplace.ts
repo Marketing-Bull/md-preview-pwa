@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useRef, useState, useEffect } from 'react'
 import { useStore } from '../store'
 
 interface Match {
@@ -19,6 +19,10 @@ interface UseFindReplaceResult {
 
 export const useFindReplace = (content: string): UseFindReplaceResult => {
   const { findQuery, findCaseSensitive, findRegex, setContent } = useStore()
+
+  // Track current match index as mutable ref (no re-render on nav) + state for display
+  const currentIndexRef = useRef(0)
+  const [currentIndex, setCurrentIndex] = useState(0)
 
   const buildRegex = useCallback((query: string, caseSensitive: boolean, useRegex: boolean): RegExp | null => {
     if (!query) return null
@@ -46,14 +50,12 @@ export const useFindReplace = (content: string): UseFindReplaceResult => {
     return foundMatches
   }, [content, findQuery, findCaseSensitive, findRegex, buildRegex])
 
-  const currentIndex = useMemo(() => {
-    if (matches.length === 0) return -1
-    const editor = document.querySelector('textarea') as HTMLTextAreaElement
-    if (!editor) return 0
-
-    const selStart = editor.selectionStart
-    return matches.findIndex((m) => m.start >= selStart) || 0
-  }, [matches])
+  // Reset to first match whenever the match list changes (new query/content)
+  useEffect(() => {
+    currentIndexRef.current = 0
+    setCurrentIndex(0)
+    if (matches.length > 0) selectMatch(0)
+  }, [matches]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectMatch = useCallback((index: number) => {
     if (index < 0 || index >= matches.length) return
@@ -71,30 +73,37 @@ export const useFindReplace = (content: string): UseFindReplaceResult => {
   }, [matches])
 
   const doFind = useCallback(() => {
-    // Actual finding is done in the useMemo above
+    // Finding is handled in the useMemo above
   }, [])
 
   const findNext = useCallback(() => {
     if (matches.length === 0) return
-    const nextIndex = (currentIndex + 1) % matches.length
-    selectMatch(nextIndex)
-  }, [currentIndex, matches, selectMatch])
+    const next = (currentIndexRef.current + 1) % matches.length
+    currentIndexRef.current = next
+    setCurrentIndex(next)
+    selectMatch(next)
+  }, [matches, selectMatch])
 
   const findPrev = useCallback(() => {
     if (matches.length === 0) return
-    const prevIndex = (currentIndex - 1 + matches.length) % matches.length
-    selectMatch(prevIndex)
-  }, [currentIndex, matches, selectMatch])
+    const prev = (currentIndexRef.current - 1 + matches.length) % matches.length
+    currentIndexRef.current = prev
+    setCurrentIndex(prev)
+    selectMatch(prev)
+  }, [matches, selectMatch])
 
   const doReplace = useCallback(
     (replaceText: string) => {
-      if (matches.length === 0 || currentIndex < 0) return
+      if (matches.length === 0) return
+      const idx = currentIndexRef.current
+      if (idx < 0 || idx >= matches.length) return
 
-      const m = matches[currentIndex]
+      const m = matches[idx]
       const newContent = content.substring(0, m.start) + replaceText + content.substring(m.end)
       setContent(newContent)
+      // Stay at same index; matches will recompute and reset
     },
-    [matches, currentIndex, content, setContent]
+    [matches, content, setContent]
   )
 
   const doReplaceAll = useCallback(

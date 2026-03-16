@@ -45,7 +45,7 @@ export const RecentFiles: React.FC<RecentFilesProps> = ({ onSelect }) => {
         onClick={() => setIsOpen(!isOpen)}
         title="Recent files"
       >
-        📂
+        🕐 Recent
       </button>
 
       {isOpen && (

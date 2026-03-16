@@ -12,7 +12,7 @@
   --preview-text: #1a1a1a;
 }
 
-body.light-mode {
+.light-mode {
   --bg: #ffffff;
   --surface: #f5f5f5;
   --surface2: #efefef;
@@ -57,36 +57,60 @@ body {
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+  gap: 0;
+  padding: 6px 12px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-  flex-wrap: wrap;
-  overflow-x: auto;
+  flex-wrap: nowrap;
   position: relative;
   z-index: 1001;
 }
 
+.toolbar-left,
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.toolbar-center {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+}
+
+.toolbar-separator {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
 .toolbar .logo {
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--accent);
-  margin-right: 12px;
+  margin-right: 8px;
   white-space: nowrap;
+  letter-spacing: -0.2px;
 }
 
 .toolbar button, .toolbar select {
   background: var(--surface2);
   color: var(--text);
   border: 1px solid var(--border);
-  padding: 6px 12px;
+  padding: 5px 10px;
   border-radius: 6px;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
-  font-size: 16px;
 }
 
 .toolbar button:hover {
@@ -105,31 +129,24 @@ body {
   background: var(--accent-hover);
 }
 
-.toolbar button.small {
-  padding: 4px 8px;
-  font-size: 12px;
-}
-
-.toolbar .spacer {
-  flex: 1;
-  min-width: 8px;
+.toolbar button.icon-btn {
+  padding: 5px 8px;
 }
 
 .toolbar .file-name {
   cursor: text;
-  padding: 2px 6px;
+  padding: 3px 8px;
   border-radius: 4px;
   border: 1px solid transparent;
   outline: none;
   transition: all 0.15s;
   font-size: 13px;
   color: var(--text-dim);
-  max-width: 200px;
+  max-width: 220px;
+  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
   background: transparent;
   font-family: inherit;
-  font-size: 16px;
 }
 
 .toolbar .file-name:hover {
@@ -260,6 +277,8 @@ body {
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
 }
 
 /* View modes — class is on .main-container */
@@ -412,6 +431,13 @@ body {
   min-width: 0;
   min-height: 0;
   background: var(--preview-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-scroll-container {
+  flex: 1;
+  min-height: 0;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -435,8 +461,6 @@ body {
   font-size: 1.5em;
   font-weight: 600;
   margin: 0.7em 0 0.3em 0;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 0.2em;
 }
 
 .preview-content h3 {
@@ -852,16 +876,15 @@ body {
   }
 
   .toolbar {
-    flex-wrap: nowrap;
-    overflow-x: auto;
+    padding: 4px 8px;
   }
 
-  .toolbar .spacer {
-    display: none;
+  .toolbar-center {
+    padding: 0 6px;
   }
 
   .toolbar .file-name {
-    max-width: 120px;
+    max-width: 100px;
   }
 
   .preview-content {
@@ -869,13 +892,13 @@ body {
   }
 
   .toolbar button, .toolbar select {
-    font-size: 14px;
-    padding: 4px 8px;
+    font-size: 12px;
+    padding: 4px 7px;
   }
 
   .toolbar .logo {
     margin-right: 4px;
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .main-container.view-split .editor-pane {
@@ -957,3 +980,97 @@ body {
   background: var(--accent);
   color: #000;
 }
+
+/* JSON Validator */
+.preview-content.json-mode {
+  padding: 0;
+  max-width: 100%;
+}
+
+.json-preview {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 13px;
+}
+
+.json-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.json-badge {
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.json-badge-ok  { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+.json-badge-err { background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+
+.json-hint      { font-size: 12px; color: var(--text-dim); }
+.json-error-loc { font-size: 12px; color: #f59e0b; font-weight: 600; }
+
+.json-error-msg {
+  padding: 10px 16px;
+  background: rgba(239,68,68,0.08);
+  border-bottom: 1px solid rgba(239,68,68,0.25);
+  color: #ef4444;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.json-code-wrap {
+  flex: 1;
+  overflow: auto;
+  background: var(--surface);
+}
+
+.json-lines {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: max-content;
+}
+
+.json-lines tr { line-height: 1.6; }
+
+.json-line-error { background: rgba(239,68,68,0.12); }
+.json-line-error .json-lineno { background: rgba(239,68,68,0.2); color: #ef4444; }
+
+.json-lineno {
+  user-select: none;
+  text-align: right;
+  padding: 0 12px 0 16px;
+  color: var(--text-dim);
+  min-width: 40px;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  left: 0;
+}
+
+.json-linetext {
+  padding: 0 16px;
+  white-space: pre;
+  color: var(--text);
+}
+
+/* JSON syntax colours */
+.json-key    { color: #7dd3fc; }
+.json-string { color: #86efac; }
+.json-number { color: #fb923c; }
+.json-bool   { color: #a78bfa; }
+.json-null   { color: #94a3b8; }
+
+.light-mode .json-key    { color: #0369a1; }
+.light-mode .json-string { color: #166534; }
+.light-mode .json-number { color: #c2410c; }
+.light-mode .json-bool   { color: #6d28d9; }
+.light-mode .json-null   { color: #64748b; }

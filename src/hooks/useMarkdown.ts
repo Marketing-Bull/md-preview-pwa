@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { marked, Renderer } from 'marked'
 import mermaid from 'mermaid'
 import hljs from 'highlight.js'
+import DOMPurify from 'dompurify'
 
 interface RenderResult {
   html: string
@@ -39,12 +40,13 @@ export const useMarkdown = (content: string, isDarkMode: boolean): RenderResult 
             ? hljs.highlight(code, { language: lang }).value
             : hljs.highlightAuto(code).value
 
-          return `<pre><code class="hljs language-${lang}">${highlighted}</code><button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent)">Copy</button></pre>`
+          return `<pre><code class="hljs language-${lang}">${highlighted}</code><button class="copy-btn" data-copy-code>Copy</button></pre>`
         }
 
-        renderer.listitem = function(text: string, task?: boolean, checked?: boolean): string {
+        renderer.listitem = function(text: string, task?: boolean): string {
           if (task) {
-            return `<li style="list-style:none;margin-left:-1.5em"><input type="checkbox" disabled ${checked ? 'checked' : ''}>${text}</li>\n`
+            // marked already injects the <input> into `text` — don't add another
+            return `<li style="list-style:none;margin-left:-1.5em">${text}</li>\n`
           }
           return `<li>${text}</li>\n`
         }
@@ -60,7 +62,7 @@ export const useMarkdown = (content: string, isDarkMode: boolean): RenderResult 
         mermaid.initialize({
           startOnLoad: false,
           theme: isDarkMode ? 'dark' : 'default',
-          securityLevel: 'loose',
+          securityLevel: 'antiscript',
           fontFamily: '-apple-system, sans-serif',
         })
 
@@ -93,7 +95,11 @@ export const useMarkdown = (content: string, isDarkMode: boolean): RenderResult 
           }
         }
 
-        const finalHtml = tempDiv.innerHTML
+        const finalHtml = DOMPurify.sanitize(tempDiv.innerHTML, {
+          ADD_ATTR: ['checked', 'disabled', 'data-copy-code'],
+          ALLOW_DATA_ATTR: true,
+          ADD_TAGS: ['foreignObject'],
+        })
 
         setResult({
           html: finalHtml,

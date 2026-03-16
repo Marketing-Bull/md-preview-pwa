@@ -1,16 +1,25 @@
 // URL sharing utilities for Issue #12
 
+const toUrlSafeBase64 = (str: string): string => {
+  return btoa(unescape(encodeURIComponent(str)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '')
+}
+
+const fromUrlSafeBase64 = (str: string): string => {
+  const padded = str.replace(/-/g, '+').replace(/_/g, '/') + '=='.slice(0, (4 - str.length % 4) % 4)
+  return decodeURIComponent(escape(atob(padded)))
+}
+
 /**
- * Encodes markdown content as base64 and returns a shareable URL
+ * Encodes markdown content as URL-safe base64 and returns a shareable URL
  */
 export const generateShareUrl = (content: string): string => {
   try {
-    // Encode content to base64
-    const encoded = btoa(unescape(encodeURIComponent(content)))
-    // Get current origin
+    const encoded = toUrlSafeBase64(content)
     const origin = window.location.origin
     const path = window.location.pathname
-    // Create share URL with encoded content
     return `${origin}${path}?md=${encoded}`
   } catch (error) {
     console.error('Error generating share URL:', error)
@@ -26,9 +35,7 @@ export const decodeContentFromUrl = (): string | null => {
     const params = new URLSearchParams(window.location.search)
     const encoded = params.get('md')
     if (!encoded) return null
-    // Decode from base64
-    const decoded = decodeURIComponent(escape(atob(encoded)))
-    return decoded
+    return fromUrlSafeBase64(encoded)
   } catch (error) {
     console.error('Error decoding URL content:', error)
     return null

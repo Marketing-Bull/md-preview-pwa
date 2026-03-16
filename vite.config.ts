@@ -3,16 +3,16 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  base: './',
+  base: '/',
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'Marketing Bull Markdown Editor Preview',
-        short_name: 'MB Markdown',
-        description: 'Fast Markdown + Mermaid previewer with PDF export',
+        name: 'Marketing Bull Markdown & Mermaid Editor',
+        short_name: 'MB Editor',
+        description: 'Marketing Bull Markdown & Mermaid editor with PDF export',
         theme_color: '#001a33',
         background_color: '#001a33',
         display: 'standalone',

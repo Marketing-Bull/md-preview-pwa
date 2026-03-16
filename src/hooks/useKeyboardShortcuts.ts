@@ -6,60 +6,58 @@ interface Shortcuts {
   toggleTheme: () => void
   toggleFindBar: () => void
   exportPDF: () => void
+  exportHTML: () => void
   cycleViewMode: () => void
+  share: () => void
+  toggleReadingMode: () => void
+  addTab: () => void
+  toggleShortcuts: () => void
   closeModal: () => void
+}
+
+const isTypingTarget = (e: KeyboardEvent): boolean => {
+  const target = e.target as HTMLElement
+  const tag = target.tagName
+  return tag === 'TEXTAREA' || tag === 'INPUT' || target.isContentEditable
 }
 
 export const useKeyboardShortcuts = (shortcuts: Shortcuts) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isCmdOrCtrl = e.metaKey || e.ctrlKey
+      const typing = isTypingTarget(e)
 
-      if (isCmdOrCtrl && e.key === 'f') {
-        e.preventDefault()
-        shortcuts.toggleFindBar()
-      }
-
-      if (isCmdOrCtrl && e.key === 'd') {
-        e.preventDefault()
-        shortcuts.toggleTheme()
-      }
-
-      if (isCmdOrCtrl && e.key === 's') {
-        e.preventDefault()
-        shortcuts.saveFile()
-      }
-
-      if (isCmdOrCtrl && e.key === 'o') {
-        e.preventDefault()
-        shortcuts.openFile()
-      }
-
-      if (isCmdOrCtrl && e.key === 'p') {
-        e.preventDefault()
-        shortcuts.exportPDF()
-      }
-
-      if (isCmdOrCtrl && e.key === 'e') {
-        e.preventDefault()
-        shortcuts.cycleViewMode()
-      }
+      // Cmd/Ctrl shortcuts work everywhere (they don't conflict with typing)
+      if (isCmdOrCtrl && e.key === 'f') { e.preventDefault(); shortcuts.toggleFindBar(); return }
+      if (isCmdOrCtrl && e.key === 'd') { e.preventDefault(); shortcuts.toggleTheme(); return }
+      if (isCmdOrCtrl && e.key === 's') { e.preventDefault(); shortcuts.saveFile(); return }
+      if (isCmdOrCtrl && e.key === 'o') { e.preventDefault(); shortcuts.openFile(); return }
+      if (isCmdOrCtrl && e.key === 'p') { e.preventDefault(); shortcuts.exportPDF(); return }
+      if (isCmdOrCtrl && e.key === 'e') { e.preventDefault(); shortcuts.cycleViewMode(); return }
+      if (isCmdOrCtrl && e.shiftKey && e.key === 'H') { e.preventDefault(); shortcuts.exportHTML(); return }
+      if (isCmdOrCtrl && e.shiftKey && e.key === 'S') { e.preventDefault(); shortcuts.share(); return }
+      if (isCmdOrCtrl && e.key === 'r') { e.preventDefault(); shortcuts.toggleReadingMode(); return }
+      if (isCmdOrCtrl && e.key === 't') { e.preventDefault(); shortcuts.addTab(); return }
 
       if (isCmdOrCtrl && e.key === 'b') {
         e.preventDefault()
         const el = document.querySelector('textarea') as HTMLTextAreaElement
         if (el) wrapSelection(el, '**', '**')
+        return
       }
 
       if (isCmdOrCtrl && e.key === 'i') {
         e.preventDefault()
         const el = document.querySelector('textarea') as HTMLTextAreaElement
         if (el) wrapSelection(el, '*', '*')
+        return
       }
 
-      if (e.key === 'Escape') {
-        shortcuts.closeModal()
-      }
+      // Bare-key shortcuts must NOT fire while user is typing
+      if (typing) return
+
+      if (e.key === '?') { e.preventDefault(); shortcuts.toggleShortcuts(); return }
+      if (e.key === 'Escape') { shortcuts.closeModal() }
     }
 
     window.addEventListener('keydown', handleKeyDown)

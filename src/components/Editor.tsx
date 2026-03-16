@@ -9,6 +9,18 @@ export const Editor: React.FC<EditorProps> = ({ onContentChange }) => {
   const { content, setContent } = useStore()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
+  // Sync store → DOM only when content changes from an external source
+  // (file load, tab switch, URL share). If the textarea already matches,
+  // we're the source of the change and must not touch the DOM (cursor would reset).
+  useEffect(() => {
+    const ta = textareaRef.current
+    if (!ta || ta.value === content) return
+    const start = ta.selectionStart
+    const end = ta.selectionEnd
+    ta.value = content
+    ta.setSelectionRange(Math.min(start, content.length), Math.min(end, content.length))
+  }, [content])
+
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.currentTarget.value
     setContent(newContent)
@@ -24,11 +36,9 @@ export const Editor: React.FC<EditorProps> = ({ onContentChange }) => {
       const textarea = e.currentTarget
       const start = textarea.selectionStart
       const end = textarea.selectionEnd
-
       const newContent = textarea.value.substring(0, start) + '  ' + textarea.value.substring(end)
       setContent(newContent)
       onContentChange(newContent)
-
       setTimeout(() => {
         textarea.selectionStart = textarea.selectionEnd = start + 2
       }, 0)
@@ -40,12 +50,10 @@ export const Editor: React.FC<EditorProps> = ({ onContentChange }) => {
       const start = textarea.selectionStart
       const end = textarea.selectionEnd
       const selected = textarea.value.substring(start, end)
-
       if (selected) {
         const newContent = textarea.value.substring(0, start) + `**${selected}**` + textarea.value.substring(end)
         setContent(newContent)
         onContentChange(newContent)
-
         setTimeout(() => {
           textarea.selectionStart = start + 2
           textarea.selectionEnd = end + 2
@@ -59,12 +67,10 @@ export const Editor: React.FC<EditorProps> = ({ onContentChange }) => {
       const start = textarea.selectionStart
       const end = textarea.selectionEnd
       const selected = textarea.value.substring(start, end)
-
       if (selected) {
         const newContent = textarea.value.substring(0, start) + `*${selected}*` + textarea.value.substring(end)
         setContent(newContent)
         onContentChange(newContent)
-
         setTimeout(() => {
           textarea.selectionStart = start + 1
           textarea.selectionEnd = end + 1
@@ -73,12 +79,6 @@ export const Editor: React.FC<EditorProps> = ({ onContentChange }) => {
     }
   }
 
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.value = content
-    }
-  }, [content])
-
   return (
     <textarea
       ref={textareaRef}
@@ -86,7 +86,7 @@ export const Editor: React.FC<EditorProps> = ({ onContentChange }) => {
       placeholder="Type or paste Markdown here..."
       onChange={handleChange}
       onKeyDown={handleKeyDown}
-      value={content}
+      defaultValue={content}
       spellCheck="false"
     />
   )
