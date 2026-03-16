@@ -183,6 +183,18 @@ export const App: React.FC = () => {
 
       {readingMode && <ReadingModeControls />}
 
+      <FindBar
+        visible={showFindBar}
+        matchCount={matchCount}
+        currentMatch={currentIndex}
+        onClose={() => setShowFindBar(false)}
+        onFind={doFind}
+        onNext={findNext}
+        onPrev={findPrev}
+        onReplace={doReplace}
+        onReplaceAll={doReplaceAll}
+      />
+
       {readingMode ? (
         <div className="reading-mode-container" style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight, filter: sepia ? 'sepia(0.3)' : 'none' }}>
           <Preview />
@@ -196,17 +208,6 @@ export const App: React.FC = () => {
                   setContent(newContent)
                   doFind(newContent)
                 }}
-              />
-              <FindBar
-                visible={showFindBar}
-                matchCount={matchCount}
-                currentMatch={currentIndex}
-                onClose={() => setShowFindBar(false)}
-                onFind={doFind}
-                onNext={findNext}
-                onPrev={findPrev}
-                onReplace={doReplace}
-                onReplaceAll={doReplaceAll}
               />
             </div>
 
@@ -242,17 +243,6 @@ export const App: React.FC = () => {
                 setContent(newContent)
                 doFind(newContent)
               }}
-            />
-            <FindBar
-              visible={showFindBar}
-              matchCount={matchCount}
-              currentMatch={currentIndex}
-              onClose={() => setShowFindBar(false)}
-              onFind={doFind}
-              onNext={findNext}
-              onPrev={findPrev}
-              onReplace={doReplace}
-              onReplaceAll={doReplaceAll}
             />
           </div>
 
