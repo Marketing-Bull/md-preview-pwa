@@ -25,6 +25,10 @@ interface AppStore {
   fileName: string
   setFileName: (name: string) => void
 
+  // File handle for Save (File System Access API)
+  fileHandle: FileSystemFileHandle | null
+  setFileHandle: (handle: FileSystemFileHandle | null) => void
+
   // UI
   isDarkMode: boolean
   toggleTheme: () => void
@@ -335,6 +339,9 @@ export const useStore = create<AppStore>((set, _get) => ({
   },
 
   fileName: initialActiveFile?.name || 'untitled.md',
+
+  fileHandle: null,
+  setFileHandle: (handle) => set({ fileHandle: handle }),
 
   setFileName: (name: string) => {
     set((s) => {

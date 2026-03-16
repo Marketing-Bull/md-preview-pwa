@@ -50,12 +50,12 @@ export const useFindReplace = (content: string): UseFindReplaceResult => {
     return foundMatches
   }, [content, findQuery, findCaseSensitive, findRegex, buildRegex])
 
-  // Reset to first match whenever the match list changes (new query/content)
+  // Reset to first match whenever the match list changes (new query/content).
+  // Do NOT call selectMatch here — it steals focus from the find input.
   useEffect(() => {
     currentIndexRef.current = 0
     setCurrentIndex(0)
-    if (matches.length > 0) selectMatch(0)
-  }, [matches]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [matches])
 
   const selectMatch = useCallback((index: number) => {
     if (index < 0 || index >= matches.length) return

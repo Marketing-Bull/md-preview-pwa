@@ -1,10 +1,11 @@
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useRef, useState, useEffect, useCallback } from 'react'
 import { useStore } from '../store'
 
 interface ToolbarProps {
   onNew: () => void
   onOpen: () => void
   onSave: () => void
+  onSaveAs: () => void
   onExportHTML: () => void
   onExportPDF: () => void
   onShare: () => void
@@ -21,6 +22,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onNew,
   onOpen,
   onSave,
+  onSaveAs,
   onExportHTML,
   onExportPDF,
   onShare,
@@ -35,7 +37,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   const { isDarkMode, viewMode } = useStore()
   const fileNameRef = useRef<HTMLDivElement>(null)
   const [exportOpen, setExportOpen] = useState(false)
+  const [fileMenuOpen, setFileMenuOpen] = useState(false)
   const exportMenuRef = useRef<HTMLDivElement>(null)
+  const fileMenuRef = useRef<HTMLDivElement>(null)
 
   const handleFileNameBlur = () => {
     let name = fileNameRef.current?.textContent?.trim() || 'untitled.md'
@@ -72,44 +76,84 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   }
 
   useEffect(() => {
-    if (!exportOpen) return
+    if (!exportOpen && !fileMenuOpen) return
     const handleClickOutside = (e: MouseEvent) => {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+      if (exportOpen && exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
         setExportOpen(false)
+      }
+      if (fileMenuOpen && fileMenuRef.current && !fileMenuRef.current.contains(e.target as Node)) {
+        setFileMenuOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [exportOpen])
+  }, [exportOpen, fileMenuOpen])
 
   const viewLabel = viewMode === 'split' ? '⬛ Split' : viewMode === 'editor' ? '✏️ Editor' : '👁 Preview'
 
-  const exportItem = (label: string, action: () => void, shortcut?: string) => (
+  const menuItem = useCallback((label: string, action: () => void, shortcut?: string) => (
     <button
       key={label}
-      onClick={() => { action(); setExportOpen(false) }}
-      title={shortcut}
+      onClick={action}
       style={{
-        display: 'block', width: '100%', padding: '9px 14px',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        width: '100%', padding: '9px 14px',
         background: 'transparent', border: 'none', textAlign: 'left',
         fontSize: '13px', color: 'var(--text)', cursor: 'pointer',
         transition: 'background 0.15s', whiteSpace: 'nowrap',
+        gap: '24px',
       }}
       onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface2)')}
       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
     >
-      {label}
+      <span>{label}</span>
+      {shortcut && <span style={{ fontSize: '11px', color: 'var(--text-dim)', fontFamily: 'SF Mono, monospace' }}>{shortcut}</span>}
     </button>
-  )
+  ), [])
+
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPad|iPhone/.test(navigator.userAgent)
+  const modKey = isMac ? '⌘' : 'Ctrl+'
 
   return (
     <div className="toolbar">
-      {/* Left: brand + file operations */}
+      {/* Left: brand + file menu + quick save */}
       <div className="toolbar-left">
         <span className="logo">🐂 MB Editor</span>
-        <button onClick={onNew} title="New file (Cmd+T)">＋ New</button>
-        <button onClick={onOpen} title="Open file (Cmd+O)">📂 Open</button>
-        <button onClick={onSave} title="Save (Cmd+S)">💾 Save</button>
+
+        {/* File dropdown menu */}
+        <div ref={fileMenuRef} style={{ position: 'relative' }}>
+          <button onClick={() => setFileMenuOpen(!fileMenuOpen)} title="File menu">
+            File ▾
+          </button>
+          {fileMenuOpen && (
+            <div style={{
+              position: 'fixed',
+              top: fileMenuRef.current
+                ? fileMenuRef.current.getBoundingClientRect().bottom + 4
+                : 40,
+              left: fileMenuRef.current
+                ? fileMenuRef.current.getBoundingClientRect().left
+                : 0,
+              background: 'var(--surface)', border: '1px solid var(--border)',
+              borderRadius: '6px', zIndex: 9999,
+              boxShadow: '0 4px 16px rgba(0,0,0,0.3)', minWidth: '200px',
+            }}>
+              {menuItem('New File', () => { onNew(); setFileMenuOpen(false) }, `${modKey}T`)}
+              {menuItem('Open...', () => { onOpen(); setFileMenuOpen(false) }, `${modKey}O`)}
+              <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
+              {menuItem('Save', () => { onSave(); setFileMenuOpen(false) }, `${modKey}S`)}
+              {menuItem('Save As...', () => { onSaveAs(); setFileMenuOpen(false) }, `⇧${modKey}S`)}
+              <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
+              {menuItem('Export PDF', () => { onExportPDF(); setFileMenuOpen(false) }, `${modKey}P`)}
+              {menuItem('Export HTML', () => { onExportHTML(); setFileMenuOpen(false) })}
+              {menuItem('Share as URL', () => { onShare(); setFileMenuOpen(false) })}
+            </div>
+          )}
+        </div>
+
+        <button onClick={onSave} title={`Save (${modKey}S)`}>
+          💾
+        </button>
       </div>
 
       {/* Center: editable filename */}
@@ -150,35 +194,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         <button onClick={onShowFind} className="primary" title="Find & Replace (Cmd+F)">
           🔍 Find
         </button>
-
-        <div className="toolbar-separator" />
-
-        {/* Export dropdown — uses fixed positioning to escape toolbar overflow */}
-        <div ref={exportMenuRef} style={{ position: 'relative' }}>
-          <button onClick={() => setExportOpen(!exportOpen)} title="Export / Share">
-            ↗ Export ▾
-          </button>
-          {exportOpen && (
-            <div style={{
-              position: 'fixed',
-              top: exportMenuRef.current
-                ? exportMenuRef.current.getBoundingClientRect().bottom + 4
-                : 40,
-              right: exportMenuRef.current
-                ? window.innerWidth - exportMenuRef.current.getBoundingClientRect().right
-                : 0,
-              background: 'var(--surface)', border: '1px solid var(--border)',
-              borderRadius: '6px', zIndex: 9999, marginTop: '0',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.3)', minWidth: '180px',
-            }}>
-              {exportItem('📄 Export PDF', onExportPDF, 'Cmd+P')}
-              {exportItem('🌐 Export HTML', onExportHTML, 'Cmd+Shift+H')}
-              {exportItem('💾 Download Markdown', onSave, 'Cmd+S')}
-              <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
-              {exportItem('🔗 Share as URL', onShare, 'Cmd+Shift+S')}
-            </div>
-          )}
-        </div>
 
         <div className="toolbar-separator" />
 
