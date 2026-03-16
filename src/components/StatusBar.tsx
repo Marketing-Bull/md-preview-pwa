@@ -27,6 +27,15 @@ export const StatusBar: React.FC = () => {
       {lastSaved && <span style={{ opacity: 0.6 }}>💾 saved</span>}
       {lastSaved && <span>·</span>}
       <span>Markdown + Mermaid + Syntax Highlighting</span>
+      <a
+        href="https://getmarketingbull.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mb-brand-link"
+        title="Marketing Bull"
+      >
+        <img src="/mb-logo.png" alt="Marketing Bull" className="mb-brand-logo" />
+      </a>
     </div>
   )
 }
