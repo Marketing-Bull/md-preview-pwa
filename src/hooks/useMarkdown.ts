@@ -13,7 +13,7 @@ let mermaidCounter = 0
 
 export const useMarkdown = (content: string, isDarkMode: boolean): RenderResult => {
   const [result, setResult] = useState<RenderResult>({ html: '', headings: [] })
-  const renderTimeoutRef = useRef<NodeJS.Timeout>()
+  const renderTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const highlightThemeRef = useRef<'dark' | 'light'>(isDarkMode ? 'dark' : 'light')
 
   useEffect(() => {
@@ -30,22 +30,21 @@ export const useMarkdown = (content: string, isDarkMode: boolean): RenderResult 
         // Custom renderer for mermaid blocks and code copy buttons
         const renderer = new Renderer()
         
-        renderer.code = function(code: string, infostring?: string, _escaped?: boolean): string {
+        renderer.code = function({ text, lang: infostring }: { text: string; lang?: string }): string {
           const lang = (infostring || '').match(/^\S*/)?.[0] || ''
           if (lang === 'mermaid') {
-            return `<div class="mermaid">${code}</div>`
+            return `<div class="mermaid">${text}</div>`
           }
 
           const highlighted = lang && hljs.getLanguage(lang)
-            ? hljs.highlight(code, { language: lang }).value
-            : hljs.highlightAuto(code).value
+            ? hljs.highlight(text, { language: lang }).value
+            : hljs.highlightAuto(text).value
 
           return `<pre><code class="hljs language-${lang}">${highlighted}</code><button class="copy-btn" data-copy-code>Copy</button></pre>`
         }
 
-        renderer.listitem = function(text: string, task?: boolean): string {
+        renderer.listitem = function({ text, task }: { text: string; task: boolean }): string {
           if (task) {
-            // marked already injects the <input> into `text` — don't add another
             return `<li style="list-style:none;margin-left:-1.5em">${text}</li>\n`
           }
           return `<li>${text}</li>\n`
