@@ -20,6 +20,8 @@ pnpm-debug.log*
 
 # Editor / OS
 .DS_Store
+Icon
+Icon\r
 Thumbs.db
 .idea/
 .vscode/
