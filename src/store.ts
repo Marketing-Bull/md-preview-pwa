@@ -255,7 +255,7 @@ if (Object.keys(initialFiles).length === 0) {
 
 const initialActiveFile = initialFiles[initialActiveFileId]
 
-export const useStore = create<AppStore>((set, get) => ({
+export const useStore = create<AppStore>((set, _get) => ({
   // Multiple files
   files: initialFiles,
   activeFileId: initialActiveFileId,
