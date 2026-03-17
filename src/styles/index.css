@@ -4,12 +4,16 @@
   --surface2: #1a3d5c;
   --border: #2a5a7f;
   --text: #e0e0e0;
-  --text-dim: #888;
+  --text-dim: #999;
   --accent: #4da6ff;
   --accent-hover: #66b3ff;
+  --accent-text: #000;
   --sidebar-bg: #0a1f35;
-  --preview-bg: #f8f9fa;
-  --preview-text: #1a1a1a;
+  --preview-bg: #0d1117;
+  --preview-text: #c9d1d9;
+  --preview-code-bg: #161b22;
+  --preview-border: #30363d;
+  --preview-heading-border: #21262d;
 }
 
 .light-mode {
@@ -21,9 +25,13 @@
   --text-dim: #666;
   --accent: #2563eb;
   --accent-hover: #3b82f6;
+  --accent-text: #fff;
   --sidebar-bg: #fafafa;
   --preview-bg: #ffffff;
   --preview-text: #1a1a1a;
+  --preview-code-bg: #f6f8fa;
+  --preview-border: #e1e4e8;
+  --preview-heading-border: #e1e4e8;
 }
 
 * {
@@ -120,7 +128,7 @@ body {
 
 .toolbar button.primary {
   background: var(--accent);
-  color: #000;
+  color: var(--accent-text);
   border-color: var(--accent);
   font-weight: 600;
 }
@@ -467,7 +475,7 @@ body {
   font-size: 2em;
   font-weight: 700;
   margin: 0.5em 0 0.3em 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--preview-heading-border);
   padding-bottom: 0.3em;
 }
 
@@ -505,13 +513,15 @@ body {
   border-left: 4px solid var(--accent);
   margin: 1em 0;
   padding: 0.5em 1em;
-  color: var(--text-dim);
-  background: var(--surface2);
+  color: var(--preview-text);
+  opacity: 0.85;
+  background: var(--preview-code-bg);
   border-radius: 4px;
 }
 
 .preview-content code {
-  background: var(--surface2);
+  background: var(--preview-code-bg);
+  color: var(--preview-text);
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 0.9em;
@@ -519,8 +529,8 @@ body {
 }
 
 .preview-content pre {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--preview-code-bg);
+  border: 1px solid var(--preview-border);
   border-radius: 8px;
   padding: 16px;
   overflow-x: auto;
@@ -540,13 +550,14 @@ body {
 }
 
 .preview-content th, .preview-content td {
-  border: 1px solid var(--border);
+  border: 1px solid var(--preview-border);
   padding: 8px 12px;
   text-align: left;
+  color: var(--preview-text);
 }
 
 .preview-content th {
-  background: var(--surface2);
+  background: var(--preview-code-bg);
   font-weight: 600;
 }
 
@@ -575,6 +586,59 @@ body {
 
 .preview-content input[type="checkbox"] {
   margin-right: 8px;
+}
+
+.preview-content details {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  background: var(--preview-code-bg);
+  border: 1px solid var(--preview-border);
+  border-radius: 8px;
+}
+
+.preview-content details[open] {
+  padding-bottom: 1em;
+}
+
+.preview-content summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.5em 0;
+  color: var(--accent);
+  user-select: none;
+}
+
+.preview-content summary:hover {
+  opacity: 0.8;
+}
+
+.preview-content kbd {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.85em;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  color: var(--preview-text);
+  background: var(--preview-code-bg);
+  border: 1px solid var(--preview-border);
+  border-radius: 4px;
+  box-shadow: 0 1px 0 var(--preview-border);
+}
+
+.preview-content hr {
+  border: none;
+  border-top: 1px solid var(--preview-border);
+  margin: 2em 0;
+}
+
+.preview-content dt {
+  font-weight: 600;
+  margin-top: 1em;
+}
+
+.preview-content dd {
+  margin-left: 1.5em;
+  color: var(--preview-text);
+  opacity: 0.85;
 }
 
 /* Status bar */
@@ -783,7 +847,7 @@ body {
   margin-top: 16px;
   width: 100%;
   background: var(--accent);
-  color: #000;
+  color: var(--accent-text);
   border: none;
   padding: 8px 16px;
   border-radius: 6px;
@@ -838,7 +902,7 @@ body {
   width: 22px;
   height: 22px;
   background: var(--accent);
-  color: #000;
+  color: var(--accent-text);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -874,10 +938,9 @@ body {
   line-height: 1.5;
 }
 
-/* Highlight.js theme loading */
-.hljs {
-  background: var(--surface) !important;
-  color: var(--text) !important;
+/* Highlight.js theme loading — use preview-specific bg so it works in both modes */
+.preview-content .hljs {
+  background: var(--preview-code-bg) !important;
 }
 
 /* Mobile tab bar (iPad/touch) */
@@ -1088,12 +1151,49 @@ body {
 /* Selection */
 ::selection {
   background: var(--accent);
-  color: #000;
+  color: var(--accent-text);
 }
 
 ::-moz-selection {
   background: var(--accent);
-  color: #000;
+  color: var(--accent-text);
+}
+
+/* HTML Preview iframe */
+.html-preview-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #fff;
+}
+
+/* Accent color picker */
+.accent-picker {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 2px;
+}
+
+.accent-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0;
+  background: none;
+  flex-shrink: 0;
+}
+
+.accent-swatch:hover {
+  transform: scale(1.2);
+}
+
+.accent-swatch.active {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--bg);
 }
 
 /* JSON Validator */

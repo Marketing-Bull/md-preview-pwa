@@ -1,11 +1,13 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react'
-import { useStore } from '../store'
+import React, { useRef, useState, useEffect } from 'react'
+import { useStore, ACCENT_PRESETS, type AccentPreset } from '../store'
 
 interface ToolbarProps {
   onNew: () => void
+  onNewHtml: () => void
   onOpen: () => void
   onSave: () => void
   onSaveAs: () => void
+  onCloseAll: () => void
   onExportHTML: () => void
   onExportPDF: () => void
   onShare: () => void
@@ -20,9 +22,11 @@ interface ToolbarProps {
 
 export const Toolbar: React.FC<ToolbarProps> = ({
   onNew,
+  onNewHtml,
   onOpen,
   onSave,
   onSaveAs,
+  onCloseAll,
   onExportHTML,
   onExportPDF,
   onShare,
@@ -34,17 +38,16 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   fileName,
   onFileNameChange,
 }) => {
-  const { isDarkMode, viewMode } = useStore()
+  const { isDarkMode, viewMode, accentPreset, setAccentPreset } = useStore()
   const fileNameRef = useRef<HTMLDivElement>(null)
-  const [exportOpen, setExportOpen] = useState(false)
   const [fileMenuOpen, setFileMenuOpen] = useState(false)
-  const exportMenuRef = useRef<HTMLDivElement>(null)
   const fileMenuRef = useRef<HTMLDivElement>(null)
 
   const handleFileNameBlur = () => {
     let name = fileNameRef.current?.textContent?.trim() || 'untitled.md'
     if (!name) name = 'untitled.md'
-    if (!name.endsWith('.md') && !name.endsWith('.markdown')) name += '.md'
+    const hasExt = /\.(md|markdown|html|htm|txt)$/i.test(name)
+    if (!hasExt) name += '.md'
     onFileNameChange(name)
   }
 
@@ -76,32 +79,31 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   }
 
   useEffect(() => {
-    if (!exportOpen && !fileMenuOpen) return
+    if (!fileMenuOpen) return
     const handleClickOutside = (e: MouseEvent) => {
-      if (exportOpen && exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
-        setExportOpen(false)
-      }
-      if (fileMenuOpen && fileMenuRef.current && !fileMenuRef.current.contains(e.target as Node)) {
+      if (fileMenuRef.current && !fileMenuRef.current.contains(e.target as Node)) {
         setFileMenuOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [exportOpen, fileMenuOpen])
+  }, [fileMenuOpen])
 
   const viewLabel = viewMode === 'split' ? '⬛ Split' : viewMode === 'editor' ? '✏️ Editor' : '👁 Preview'
 
-  const menuItem = useCallback((label: string, action: () => void, shortcut?: string) => (
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent)
+  const mod = isMac ? '⌘' : 'Ctrl+'
+
+  const menuItem = (label: string, action: () => void, shortcut?: string) => (
     <button
       key={label}
-      onClick={action}
+      onClick={() => { action(); setFileMenuOpen(false) }}
       style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         width: '100%', padding: '9px 14px',
         background: 'transparent', border: 'none', textAlign: 'left',
         fontSize: '13px', color: 'var(--text)', cursor: 'pointer',
-        transition: 'background 0.15s', whiteSpace: 'nowrap',
-        gap: '24px',
+        transition: 'background 0.15s', whiteSpace: 'nowrap', gap: '24px',
       }}
       onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface2)')}
       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
@@ -109,14 +111,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       <span>{label}</span>
       {shortcut && <span style={{ fontSize: '11px', color: 'var(--text-dim)', fontFamily: 'SF Mono, monospace' }}>{shortcut}</span>}
     </button>
-  ), [])
+  )
 
-  const isMac = typeof navigator !== 'undefined' && /Mac|iPad|iPhone/.test(navigator.userAgent)
-  const modKey = isMac ? '⌘' : 'Ctrl+'
+  const menuDivider = () => (
+    <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
+  )
 
   return (
     <div className="toolbar">
-      {/* Left: brand + file menu + quick save */}
+      {/* Left: brand + File menu + quick save */}
       <div className="toolbar-left">
         <span className="logo">🐂 MB Editor</span>
 
@@ -136,24 +139,25 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 : 0,
               background: 'var(--surface)', border: '1px solid var(--border)',
               borderRadius: '6px', zIndex: 9999,
-              boxShadow: '0 4px 16px rgba(0,0,0,0.3)', minWidth: '200px',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.3)', minWidth: '220px',
             }}>
-              {menuItem('New File', () => { onNew(); setFileMenuOpen(false) }, `${modKey}T`)}
-              {menuItem('Open...', () => { onOpen(); setFileMenuOpen(false) }, `${modKey}O`)}
-              <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
-              {menuItem('Save', () => { onSave(); setFileMenuOpen(false) }, `${modKey}S`)}
-              {menuItem('Save As...', () => { onSaveAs(); setFileMenuOpen(false) }, `⇧${modKey}S`)}
-              <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
-              {menuItem('Export PDF', () => { onExportPDF(); setFileMenuOpen(false) }, `${modKey}P`)}
-              {menuItem('Export HTML', () => { onExportHTML(); setFileMenuOpen(false) })}
-              {menuItem('Share as URL', () => { onShare(); setFileMenuOpen(false) })}
+              {menuItem('New Markdown', onNew, `${mod}T`)}
+              {menuItem('New HTML', onNewHtml)}
+              {menuItem('Open...', onOpen, `${mod}O`)}
+              {menuDivider()}
+              {menuItem('Save', onSave, `${mod}S`)}
+              {menuItem('Save As...', onSaveAs, `⇧${mod}S`)}
+              {menuDivider()}
+              {menuItem('Export PDF', onExportPDF, `${mod}P`)}
+              {menuItem('Export HTML', onExportHTML)}
+              {menuItem('Share as URL', onShare)}
+              {menuDivider()}
+              {menuItem('Close All Tabs', onCloseAll)}
             </div>
           )}
         </div>
 
-        <button onClick={onSave} title={`Save (${modKey}S)`}>
-          💾
-        </button>
+        <button onClick={onSave} className="icon-btn" title={`Save (${mod}S)`}>💾</button>
       </div>
 
       {/* Center: editable filename */}
@@ -172,26 +176,42 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </div>
       </div>
 
-      {/* Right: view | find | export | settings */}
+      {/* Right: view | find | accent | settings */}
       <div className="toolbar-right">
         <button
           onClick={toggleTheme}
           className="icon-btn"
-          title={isDarkMode ? 'Switch to light mode (Cmd+D)' : 'Switch to dark mode (Cmd+D)'}
+          title={isDarkMode ? `Light mode (${mod}D)` : `Dark mode (${mod}D)`}
         >
           {isDarkMode ? '☀️' : '🌙'}
         </button>
+
+        {/* Accent color picker (dark mode only) */}
+        {isDarkMode && (
+          <div className="accent-picker" title="Accent color">
+            {(Object.keys(ACCENT_PRESETS) as AccentPreset[]).map((preset) => (
+              <button
+                key={preset}
+                className={`accent-swatch ${preset === accentPreset ? 'active' : ''}`}
+                style={{ background: ACCENT_PRESETS[preset].accent }}
+                onClick={() => setAccentPreset(preset)}
+                title={preset.charAt(0).toUpperCase() + preset.slice(1)}
+              />
+            ))}
+          </div>
+        )}
+
         <button onClick={cycleViewMode} title="Cycle view: Split / Editor / Preview">
           {viewLabel}
         </button>
         <button
           onClick={onToggleReadingMode}
-          title="Reading mode (Cmd+R)"
+          title={`Reading mode (${mod}R)`}
           style={{ color: readingMode ? 'var(--accent)' : 'inherit' }}
         >
           📖 Read
         </button>
-        <button onClick={onShowFind} className="primary" title="Find & Replace (Cmd+F)">
+        <button onClick={onShowFind} className="primary" title={`Find & Replace (${mod}F)`}>
           🔍 Find
         </button>
 

@@ -1,21 +1,27 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useMemo } from 'react'
 import { useMarkdown } from '../hooks/useMarkdown'
 import { useJsonValidator } from '../hooks/useJsonValidator'
 import { useStore } from '../store'
 import { JsonPreview } from './JsonPreview'
 
+const isHtmlFile = (name: string): boolean => {
+  const lower = name.toLowerCase()
+  return lower.endsWith('.html') || lower.endsWith('.htm')
+}
+
 export const Preview: React.FC = () => {
-  const { content, isDarkMode } = useStore()
-  const { html } = useMarkdown(content, isDarkMode)
-  const jsonResult = useJsonValidator(content)
+  const { content, isDarkMode, fileName } = useStore()
+  const isHtml = useMemo(() => isHtmlFile(fileName), [fileName])
+  const { html } = useMarkdown(isHtml ? '' : content, isDarkMode)
+  const jsonResult = useJsonValidator(isHtml ? '' : content)
   const markdownDivRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Render markdown HTML into the inner div (only when not in JSON mode)
+  // Render markdown HTML into the inner div (only when not in JSON or HTML mode)
   useEffect(() => {
     if (!markdownDivRef.current) return
-    markdownDivRef.current.innerHTML = jsonResult.isJson ? '' : html
-  }, [html, jsonResult.isJson])
+    markdownDivRef.current.innerHTML = jsonResult.isJson || isHtml ? '' : html
+  }, [html, jsonResult.isJson, isHtml])
 
   // Copy button event delegation for code blocks
   useEffect(() => {
@@ -77,6 +83,20 @@ export const Preview: React.FC = () => {
       clearTimeout(syncingFromPreview)
     }
   }, [])
+
+  // HTML file preview
+  if (isHtml) {
+    return (
+      <div ref={scrollRef} className="preview-scroll-container">
+        <iframe
+          srcDoc={content}
+          className="html-preview-frame"
+          sandbox="allow-scripts allow-same-origin"
+          title="HTML Preview"
+        />
+      </div>
+    )
+  }
 
   return (
     <div ref={scrollRef} className="preview-scroll-container">

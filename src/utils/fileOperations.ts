@@ -34,7 +34,7 @@ const fallbackOpenFile = (): Promise<{ content: string; fileName: string } | nul
   return new Promise((resolve) => {
     const input = document.createElement('input')
     input.type = 'file'
-    input.accept = '.md,.markdown,.txt'
+    input.accept = '.md,.markdown,.txt,.html,.htm'
 
     input.onchange = async (e: any) => {
       const file = e.target.files?.[0]
@@ -67,6 +67,10 @@ export const openFile = async (): Promise<{ content: string; fileName: string; h
           {
             description: 'Markdown & Text Files',
             accept: { 'text/markdown': ['.md', '.markdown'], 'text/plain': ['.txt'] },
+          },
+          {
+            description: 'HTML Files',
+            accept: { 'text/html': ['.html', '.htm'] },
           },
         ],
       })

@@ -2,6 +2,20 @@ import { create } from 'zustand'
 
 export type ViewMode = 'split' | 'editor' | 'preview'
 export type HighlightTheme = 'github' | 'github-dark' | 'monokai' | 'dracula' | 'solarized-dark' | 'atom-one-dark' | 'vs-light'
+export type AccentPreset = 'blue' | 'purple' | 'green' | 'orange' | 'pink' | 'cyan' | 'red' | 'gold'
+
+export const ACCENT_PRESETS: Record<AccentPreset, { accent: string; hover: string; text: string }> = {
+  blue:   { accent: '#4da6ff', hover: '#66b3ff', text: '#000' },
+  purple: { accent: '#a78bfa', hover: '#c4b5fd', text: '#000' },
+  green:  { accent: '#4ade80', hover: '#6ee7a0', text: '#000' },
+  orange: { accent: '#fb923c', hover: '#fdba74', text: '#000' },
+  pink:   { accent: '#f472b6', hover: '#f9a8d4', text: '#000' },
+  cyan:   { accent: '#22d3ee', hover: '#67e8f9', text: '#000' },
+  red:    { accent: '#f87171', hover: '#fca5a5', text: '#000' },
+  gold:   { accent: '#fbbf24', hover: '#fcd34d', text: '#000' },
+}
+
+export const WELCOME_FILE_ID = 'welcome'
 
 export interface FileData {
   id: string
@@ -16,6 +30,7 @@ interface AppStore {
   activeFileId: string
   addFile: (name: string, content?: string) => string
   deleteFile: (id: string) => void
+  closeAllFiles: () => void
   setActiveFile: (id: string) => void
   updateFile: (id: string, name?: string, content?: string) => void
 
@@ -42,6 +57,10 @@ interface AppStore {
   setColumnRatio: (ratio: number) => void
   highlightTheme: HighlightTheme
   setHighlightTheme: (theme: HighlightTheme) => void
+
+  // Accent color
+  accentPreset: AccentPreset
+  setAccentPreset: (preset: AccentPreset) => void
 
   // Search
   findQuery: string
@@ -81,6 +100,7 @@ const STORAGE_KEYS = {
   SEPIA: 'md-preview-sepia',
   FILES: 'md-preview-files',
   ACTIVE_FILE_ID: 'md-preview-active-file-id',
+  ACCENT_PRESET: 'md-preview-accent-preset',
 }
 
 const loadTheme = (): boolean => {
@@ -137,6 +157,11 @@ const loadSepia = (): boolean => {
   return localStorage.getItem(STORAGE_KEYS.SEPIA) === 'true'
 }
 
+const loadAccentPreset = (): AccentPreset => {
+  if (typeof window === 'undefined') return 'blue'
+  return (localStorage.getItem(STORAGE_KEYS.ACCENT_PRESET) as AccentPreset) || 'blue'
+}
+
 const generateFileId = (): string => {
   return `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
@@ -159,37 +184,179 @@ const loadActiveFileId = (): string => {
   return localStorage.getItem(STORAGE_KEYS.ACTIVE_FILE_ID) || ''
 }
 
-const createDefaultFile = (): FileData => {
-  const id = generateFileId()
-  return {
-    id,
-    name: 'untitled.md',
-    content: `# Markdown Editor & Preview by Marketing Bull
+const WELCOME_CONTENT = `# MB Editor — Markdown Reference
 
-A fast **Markdown + Mermaid** previewer + JSON Syntax Validator with Export.
+A fast **Markdown + HTML + Mermaid** editor with live preview, JSON validation, and export.
 
-## Features
+---
 
-- ✅ Live preview as you type
-- ✅ Mermaid diagram rendering
-- ✅ Syntax-highlighted code blocks
-- ✅ Export to **PDF** or **HTML**
-- ✅ Drag & drop \`.md\` files
-- ✅ GFM tables, task lists, blockquotes
-- ✅ JSON & JSON5 validation (paste JSON to auto-detect)
-- ✅ All data stored locally in your browser — nothing sent to any server
+## Headings
 
-## Example Table
+# Heading 1
+## Heading 2
+### Heading 3
+#### Heading 4
+##### Heading 5
+###### Heading 6
 
-| Feature | Status |
-|---------|--------|
-| Markdown | ✅ |
-| Mermaid | ✅ |
-| Code Highlighting | ✅ |
-| PDF Export | ✅ |
+---
 
-## Mermaid Diagram
+## Text Formatting
 
+This is **bold text** and this is *italic text*.
+
+This is ***bold and italic*** together.
+
+This is ~~strikethrough~~ text.
+
+This is \`inline code\` within a sentence.
+
+---
+
+## Links & Images
+
+[Visit Marketing Bull](https://marketingbull.com.au)
+
+![Placeholder image](https://via.placeholder.com/400x200?text=Markdown+Preview)
+
+---
+
+## Lists
+
+### Unordered List
+- First item
+- Second item
+  - Nested item A
+  - Nested item B
+- Third item
+
+### Ordered List
+1. First step
+2. Second step
+   1. Sub-step A
+   2. Sub-step B
+3. Third step
+
+### Task List
+- [x] Build the editor
+- [x] Add Mermaid support
+- [x] Add HTML editing
+- [x] Customizable accent colors
+- [ ] Take over the world
+
+---
+
+## Blockquotes
+
+> This is a blockquote. It can span multiple lines.
+>
+> > Nested blockquotes are also supported.
+
+> **Tip:** Press \`?\` to see all keyboard shortcuts!
+
+---
+
+## Collapsible Sections
+
+<details>
+<summary>Click to expand — Features list</summary>
+
+- Live preview as you type
+- Mermaid diagram rendering
+- Syntax-highlighted code blocks
+- Export to PDF or HTML
+- Drag & drop files
+- GFM tables, task lists, blockquotes
+- JSON & JSON5 validation
+- Custom dark mode accent colors
+- Works offline as a PWA
+
+</details>
+
+<details>
+<summary>Click to expand — Keyboard Shortcuts</summary>
+
+| Action | Shortcut |
+|--------|----------|
+| New tab | \`Cmd+T\` |
+| Open file | \`Cmd+O\` |
+| Save | \`Cmd+S\` |
+| Find & Replace | \`Cmd+F\` |
+| Toggle dark mode | \`Cmd+D\` |
+| Export PDF | \`Cmd+P\` |
+
+</details>
+
+<details>
+<summary>Click to expand — Changelog</summary>
+
+### v2.0
+- HTML file editing & preview
+- Customizable accent colors in dark mode
+- Collapsible sections support
+- Close All Tabs feature
+
+### v1.0
+- Markdown editing with live preview
+- Mermaid diagrams
+- JSON validation
+- PDF & HTML export
+
+</details>
+
+---
+
+## Tables
+
+| Feature | Status | Notes |
+|---------|:------:|------:|
+| Markdown (GFM) | ✅ | Full support |
+| HTML editing | ✅ | Live preview |
+| Mermaid diagrams | ✅ | Auto-render |
+| Code highlighting | ✅ | 180+ languages |
+| JSON validation | ✅ | JSON5 too |
+| PDF export | ✅ | High quality |
+| Dark mode | ✅ | Custom colors |
+| Offline PWA | ✅ | Install to dock |
+
+---
+
+## Code Blocks
+
+### JavaScript
+\`\`\`javascript
+const greet = (name) => {
+  console.log(\`Hello, \${name}!\`);
+};
+greet('World');
+\`\`\`
+
+### Python
+\`\`\`python
+def fibonacci(n):
+    a, b = 0, 1
+    for _ in range(n):
+        yield a
+        a, b = b, a + b
+
+print(list(fibonacci(10)))
+\`\`\`
+
+### CSS
+\`\`\`css
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  padding: 2rem;
+}
+\`\`\`
+
+---
+
+## Mermaid Diagrams
+
+### Flowchart
 \`\`\`mermaid
 graph LR
     A[Markdown Input] --> B[Marked.js Parser]
@@ -200,23 +367,72 @@ graph LR
     E --> F[Export PDF/HTML]
 \`\`\`
 
-## Code Block
-
-\`\`\`javascript
-const greet = (name) => {
-  console.log(\`Hello, \${name}!\`);
-};
-greet('Alex');
+### Sequence Diagram
+\`\`\`mermaid
+sequenceDiagram
+    participant User
+    participant Editor
+    participant Preview
+    User->>Editor: Types markdown
+    Editor->>Preview: Renders HTML
+    Preview-->>User: Shows live preview
 \`\`\`
 
-## Task List
+---
 
-- [x] Build the app
-- [x] Add Mermaid support
-- [ ] Take over the world
+## Horizontal Rules
 
-> **Tip:** Paste or type any Markdown. Mermaid diagrams render automatically!
-`,
+Three different syntaxes all produce a horizontal rule:
+
+---
+
+***
+
+___
+
+---
+
+## HTML in Markdown
+
+You can use raw HTML when Markdown isn't enough:
+
+<div style="padding: 12px; border: 2px solid #4da6ff; border-radius: 8px; background: rgba(77,166,255,0.1);">
+  <strong>Custom HTML block:</strong> This is styled with inline HTML + CSS.
+</div>
+
+<br>
+
+<kbd>Cmd</kbd> + <kbd>S</kbd> to save &nbsp;|&nbsp; <kbd>Cmd</kbd> + <kbd>P</kbd> to export PDF
+
+---
+
+## Footnotes & Extras
+
+Text with a footnote reference[^1].
+
+[^1]: This is the footnote content.
+
+Term
+: This is a definition list entry.
+
+---
+
+*Built with ❤️ by [Marketing Bull](https://marketingbull.com.au)*
+`
+
+const createWelcomeFile = (): FileData => ({
+  id: WELCOME_FILE_ID,
+  name: 'example.md',
+  content: WELCOME_CONTENT,
+  lastModified: Date.now(),
+})
+
+const createDefaultFile = (): FileData => {
+  const id = generateFileId()
+  return {
+    id,
+    name: 'untitled.md',
+    content: WELCOME_CONTENT,
     lastModified: Date.now(),
   }
 }
@@ -239,22 +455,30 @@ const startAutoSave = () => {
   }, 5000)
 }
 
-// Load files or create default one
+// Load files and always ensure a welcome tab exists
 const loadedFiles = loadFiles()
 const loadedActiveFileId = loadActiveFileId()
 let initialFiles = loadedFiles
 let initialActiveFileId = loadedActiveFileId
 
-// Fallback to legacy auto-save if no files exist
 if (Object.keys(initialFiles).length === 0) {
+  // No saved files — check legacy auto-save, otherwise just show welcome
   const autoSaved = loadAutoSavedContent()
-  const defaultFile = createDefaultFile()
   if (autoSaved) {
-    defaultFile.name = autoSaved.fileName
-    defaultFile.content = autoSaved.content
+    const legacyFile = createDefaultFile()
+    legacyFile.name = autoSaved.fileName
+    legacyFile.content = autoSaved.content
+    initialFiles = { [legacyFile.id]: legacyFile }
+    initialActiveFileId = legacyFile.id
   }
-  initialFiles = { [defaultFile.id]: defaultFile }
-  initialActiveFileId = defaultFile.id
+}
+
+// Always inject a fresh welcome tab
+const welcomeFile = createWelcomeFile()
+initialFiles = { [WELCOME_FILE_ID]: welcomeFile, ...initialFiles }
+// If no valid active file, default to welcome
+if (!initialFiles[initialActiveFileId]) {
+  initialActiveFileId = WELCOME_FILE_ID
 }
 
 const initialActiveFile = initialFiles[initialActiveFileId]
@@ -282,8 +506,18 @@ export const useStore = create<AppStore>((set, _get) => ({
       const newFiles = { ...state.files }
       delete newFiles[id]
       const remainingIds = Object.keys(newFiles)
+      if (remainingIds.length === 0) {
+        // If no files remain, create a fresh welcome tab
+        const welcome = createWelcomeFile()
+        return {
+          files: { [welcome.id]: welcome },
+          activeFileId: welcome.id,
+          content: welcome.content,
+          fileName: welcome.name,
+        }
+      }
       let newActiveId = state.activeFileId
-      if (id === state.activeFileId && remainingIds.length > 0) {
+      if (id === state.activeFileId) {
         newActiveId = remainingIds[0]
       }
       const newActive = newFiles[newActiveId]
@@ -293,6 +527,16 @@ export const useStore = create<AppStore>((set, _get) => ({
         content: newActive?.content || '',
         fileName: newActive?.name || 'untitled.md',
       }
+    })
+  },
+
+  closeAllFiles: () => {
+    const welcome = createWelcomeFile()
+    set({
+      files: { [welcome.id]: welcome },
+      activeFileId: welcome.id,
+      content: welcome.content,
+      fileName: welcome.name,
     })
   },
 
@@ -382,6 +626,12 @@ export const useStore = create<AppStore>((set, _get) => ({
   setHighlightTheme: (theme) => {
     localStorage.setItem(STORAGE_KEYS.HIGHLIGHT_THEME, theme)
     set({ highlightTheme: theme })
+  },
+
+  accentPreset: loadAccentPreset(),
+  setAccentPreset: (preset) => {
+    localStorage.setItem(STORAGE_KEYS.ACCENT_PRESET, preset)
+    set({ accentPreset: preset })
   },
 
   findQuery: '',

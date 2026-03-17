@@ -95,9 +95,9 @@ export const useMarkdown = (content: string, isDarkMode: boolean): RenderResult 
         }
 
         const finalHtml = DOMPurify.sanitize(tempDiv.innerHTML, {
-          ADD_ATTR: ['checked', 'disabled', 'data-copy-code'],
+          ADD_ATTR: ['checked', 'disabled', 'data-copy-code', 'open'],
           ALLOW_DATA_ATTR: true,
-          ADD_TAGS: ['foreignObject'],
+          ADD_TAGS: ['foreignObject', 'details', 'summary', 'kbd'],
         })
 
         setResult({

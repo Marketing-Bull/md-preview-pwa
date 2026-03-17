@@ -29,8 +29,9 @@ export const useDragDrop = ({ onFileDrop }: DragDropHandlers): boolean => {
       if (!files || files.length === 0) return
 
       const file = files[0]
-      if (!file.type.includes('text') && !file.name.endsWith('.md') && !file.name.endsWith('.markdown')) {
-        alert('Please drop a markdown or text file')
+      const validExt = /\.(md|markdown|txt|html|htm)$/i.test(file.name)
+      if (!file.type.includes('text') && !validExt) {
+        alert('Please drop a markdown, HTML, or text file')
         return
       }
 

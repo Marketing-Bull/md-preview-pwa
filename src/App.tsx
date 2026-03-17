@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { useStore } from './store'
+import { useStore, ACCENT_PRESETS } from './store'
 import { useFindReplace } from './hooks/useFindReplace'
 import { useMarkdown } from './hooks/useMarkdown'
 import { useHighlightTheme } from './hooks/useHighlightTheme'
@@ -39,9 +39,11 @@ export const App: React.FC = () => {
     lineHeight,
     sepia,
     addFile,
+    closeAllFiles,
     columnRatio,
     fileHandle,
     setFileHandle,
+    accentPreset,
   } = useStore()
 
   const [isMobile, setIsMobile] = useState(false)
@@ -53,6 +55,21 @@ export const App: React.FC = () => {
     document.body.classList.toggle('light-mode', !isDarkMode)
     document.body.classList.toggle('dark-mode', isDarkMode)
   }, [isDarkMode])
+
+  // Apply accent color CSS variables when preset or mode changes
+  useEffect(() => {
+    if (!isDarkMode) return // Only custom accent in dark mode; light mode uses its own defaults
+    const colors = ACCENT_PRESETS[accentPreset]
+    const root = document.documentElement
+    root.style.setProperty('--accent', colors.accent)
+    root.style.setProperty('--accent-hover', colors.hover)
+    root.style.setProperty('--accent-text', colors.text)
+    return () => {
+      root.style.removeProperty('--accent')
+      root.style.removeProperty('--accent-hover')
+      root.style.removeProperty('--accent-text')
+    }
+  }, [accentPreset, isDarkMode])
 
   // Load highlight.js theme stylesheet
   useHighlightTheme()
@@ -140,11 +157,15 @@ export const App: React.FC = () => {
   /** Always prompt for a new file location. */
   async function handleSaveAs() {
     const name = fileName || 'document.md'
+    const isHtmlFile = /\.(html|htm)$/i.test(name)
     if ('showSaveFilePicker' in window) {
       try {
+        const types = isHtmlFile
+          ? [{ description: 'HTML', accept: { 'text/html': ['.html', '.htm'] } }]
+          : [{ description: 'Markdown', accept: { 'text/markdown': ['.md', '.markdown'] } }]
         const handle = await (window as Window & typeof globalThis & { showSaveFilePicker: (opts: object) => Promise<FileSystemFileHandle> }).showSaveFilePicker({
           suggestedName: name,
-          types: [{ description: 'Markdown', accept: { 'text/markdown': ['.md', '.markdown'] } }],
+          types,
         })
         const writable = await handle.createWritable()
         await writable.write(content)
@@ -186,9 +207,11 @@ export const App: React.FC = () => {
     <div className={`app ${isDarkMode ? 'dark-mode' : 'light-mode'} ${isMobile ? 'mobile' : ''}`}>
       <Toolbar
         onNew={() => addFile('untitled.md')}
+        onNewHtml={() => addFile('untitled.html', '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>Untitled</title>\n  <style>\n    body { font-family: system-ui, sans-serif; padding: 20px; }\n  </style>\n</head>\n<body>\n  <h1>Hello World</h1>\n  <p>Start editing HTML here.</p>\n</body>\n</html>')}
         onOpen={handleOpen}
         onSave={handleSave}
         onSaveAs={handleSaveAs}
+        onCloseAll={closeAllFiles}
         onExportHTML={handleExportHTML}
         onExportPDF={handleExportPDF}
         onShare={handleShare}

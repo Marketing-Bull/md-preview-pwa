@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useStore } from '../store'
 
 export const TabBar: React.FC = () => {
-  const { files, activeFileId, setActiveFile, addFile, deleteFile, updateFile } = useStore()
+  const { files, activeFileId, setActiveFile, addFile, deleteFile, closeAllFiles, updateFile } = useStore()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -20,9 +20,7 @@ export const TabBar: React.FC = () => {
 
   const handleCloseTab = (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    if (Object.keys(files).length > 1) {
-      deleteFile(id)
-    }
+    deleteFile(id)
   }
 
   const startRename = (id: string, currentName: string, e: React.MouseEvent) => {
@@ -73,21 +71,29 @@ export const TabBar: React.FC = () => {
                 {file.name}
               </span>
             )}
-            {Object.keys(files).length > 1 && (
-              <button
-                className="tab-close"
-                onClick={(e) => handleCloseTab(file.id, e)}
-                title="Close file"
-              >
-                ×
-              </button>
-            )}
+            <button
+              className="tab-close"
+              onClick={(e) => handleCloseTab(file.id, e)}
+              title="Close file"
+            >
+              ×
+            </button>
           </div>
         ))}
       </div>
       <button className="tab-new" onClick={handleNewFile} title="New file (Cmd+T)">
         +
       </button>
+      {Object.keys(files).length > 1 && (
+        <button
+          className="tab-new"
+          onClick={closeAllFiles}
+          title="Close all tabs"
+          style={{ fontSize: '12px', color: 'var(--text-dim)' }}
+        >
+          ✕ All
+        </button>
+      )}
     </div>
   )
 }
