@@ -44,6 +44,7 @@ export const App: React.FC = () => {
     fileHandle,
     setFileHandle,
     accentPreset,
+    customAccentHex,
   } = useStore()
 
   const [isMobile, setIsMobile] = useState(false)
@@ -69,7 +70,7 @@ export const App: React.FC = () => {
       root.style.removeProperty('--accent-hover')
       root.style.removeProperty('--accent-text')
     }
-  }, [accentPreset, isDarkMode])
+  }, [accentPreset, isDarkMode, customAccentHex])
 
   // Load highlight.js theme stylesheet
   useHighlightTheme()

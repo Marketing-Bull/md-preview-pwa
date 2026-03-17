@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 export type ViewMode = 'split' | 'editor' | 'preview'
 export type HighlightTheme = 'github' | 'github-dark' | 'monokai' | 'dracula' | 'solarized-dark' | 'atom-one-dark' | 'vs-light'
-export type AccentPreset = 'blue' | 'purple' | 'green' | 'orange' | 'pink' | 'cyan' | 'red' | 'gold'
+export type AccentPreset = 'blue' | 'purple' | 'green' | 'orange' | 'pink' | 'cyan' | 'red' | 'gold' | 'custom'
 
 export const ACCENT_PRESETS: Record<AccentPreset, { accent: string; hover: string; text: string }> = {
   blue:   { accent: '#4da6ff', hover: '#66b3ff', text: '#000' },
@@ -13,6 +13,21 @@ export const ACCENT_PRESETS: Record<AccentPreset, { accent: string; hover: strin
   cyan:   { accent: '#22d3ee', hover: '#67e8f9', text: '#000' },
   red:    { accent: '#f87171', hover: '#fca5a5', text: '#000' },
   gold:   { accent: '#fbbf24', hover: '#fcd34d', text: '#000' },
+  custom: { accent: '#4da6ff', hover: '#66b3ff', text: '#000' },
+}
+
+/** Compute a lighter hover shade and contrast text for any hex color */
+export const buildCustomAccent = (hex: string): { accent: string; hover: string; text: string } => {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  // Lighter hover
+  const lighten = (c: number) => Math.min(255, c + 40)
+  const hover = `#${lighten(r).toString(16).padStart(2,'0')}${lighten(g).toString(16).padStart(2,'0')}${lighten(b).toString(16).padStart(2,'0')}`
+  // Perceived brightness → pick black or white text
+  const luma = 0.299 * r + 0.587 * g + 0.114 * b
+  const text = luma > 150 ? '#000' : '#fff'
+  return { accent: hex, hover, text }
 }
 
 export const WELCOME_FILE_ID = 'welcome'
@@ -61,6 +76,8 @@ interface AppStore {
   // Accent color
   accentPreset: AccentPreset
   setAccentPreset: (preset: AccentPreset) => void
+  customAccentHex: string
+  setCustomAccentHex: (hex: string) => void
 
   // Search
   findQuery: string
@@ -101,6 +118,7 @@ const STORAGE_KEYS = {
   FILES: 'md-preview-files',
   ACTIVE_FILE_ID: 'md-preview-active-file-id',
   ACCENT_PRESET: 'md-preview-accent-preset',
+  CUSTOM_ACCENT_HEX: 'md-preview-custom-accent-hex',
 }
 
 const loadTheme = (): boolean => {
@@ -161,6 +179,19 @@ const loadAccentPreset = (): AccentPreset => {
   if (typeof window === 'undefined') return 'blue'
   return (localStorage.getItem(STORAGE_KEYS.ACCENT_PRESET) as AccentPreset) || 'blue'
 }
+
+const loadCustomAccentHex = (): string => {
+  if (typeof window === 'undefined') return '#4da6ff'
+  return localStorage.getItem(STORAGE_KEYS.CUSTOM_ACCENT_HEX) || '#4da6ff'
+}
+
+// Hydrate custom preset from saved hex on startup
+;(() => {
+  const hex = loadCustomAccentHex()
+  if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
+    ACCENT_PRESETS.custom = buildCustomAccent(hex)
+  }
+})()
 
 const generateFileId = (): string => {
   return `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -632,6 +663,16 @@ export const useStore = create<AppStore>((set, _get) => ({
   setAccentPreset: (preset) => {
     localStorage.setItem(STORAGE_KEYS.ACCENT_PRESET, preset)
     set({ accentPreset: preset })
+  },
+
+  customAccentHex: loadCustomAccentHex(),
+  setCustomAccentHex: (hex) => {
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_ACCENT_HEX, hex)
+    // Update the custom preset entry in-memory
+    const colors = buildCustomAccent(hex)
+    ACCENT_PRESETS.custom = colors
+    set({ customAccentHex: hex, accentPreset: 'custom' })
+    localStorage.setItem(STORAGE_KEYS.ACCENT_PRESET, 'custom')
   },
 
   findQuery: '',

@@ -475,14 +475,16 @@ body {
   font-size: 2em;
   font-weight: 700;
   margin: 0.5em 0 0.3em 0;
-  border-bottom: 1px solid var(--preview-heading-border);
+  border-bottom: 2px solid var(--accent);
   padding-bottom: 0.3em;
+  color: var(--accent);
 }
 
 .preview-content h2 {
   font-size: 1.5em;
   font-weight: 600;
   margin: 0.7em 0 0.3em 0;
+  color: var(--accent);
 }
 
 .preview-content h3 {
@@ -547,6 +549,7 @@ body {
   border-collapse: collapse;
   width: 100%;
   margin: 1em 0;
+  border-left: 3px solid var(--accent);
 }
 
 .preview-content th, .preview-content td {
@@ -557,8 +560,10 @@ body {
 }
 
 .preview-content th {
-  background: var(--preview-code-bg);
+  background: var(--accent);
+  color: var(--accent-text);
   font-weight: 600;
+  border-color: var(--accent);
 }
 
 .preview-content img {
@@ -584,8 +589,14 @@ body {
   margin: 1em 0;
 }
 
+.preview-content strong {
+  color: var(--accent);
+  font-weight: 700;
+}
+
 .preview-content input[type="checkbox"] {
   margin-right: 8px;
+  accent-color: var(--accent);
 }
 
 .preview-content details {
@@ -626,13 +637,15 @@ body {
 
 .preview-content hr {
   border: none;
-  border-top: 1px solid var(--preview-border);
+  border-top: 2px solid var(--accent);
   margin: 2em 0;
+  opacity: 0.4;
 }
 
 .preview-content dt {
   font-weight: 600;
   margin-top: 1em;
+  color: var(--accent);
 }
 
 .preview-content dd {
