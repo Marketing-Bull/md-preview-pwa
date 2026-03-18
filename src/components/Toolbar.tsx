@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react'
-import { useStore, ACCENT_PRESETS, buildCustomAccent, type AccentPreset } from '../store'
+import { useStore, ACCENT_PRESETS, type AccentPreset } from '../store'
 
 interface ToolbarProps {
   onNew: () => void
