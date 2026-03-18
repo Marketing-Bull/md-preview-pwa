@@ -101,6 +101,8 @@ interface AppStore {
   setLineHeight: (height: number) => void
   sepia: boolean
   setSepia: (enabled: boolean) => void
+  headingSpacing: number
+  setHeadingSpacing: (spacing: number) => void
 }
 
 const STORAGE_KEYS = {
@@ -115,6 +117,7 @@ const STORAGE_KEYS = {
   FONT_SIZE: 'md-preview-font-size',
   LINE_HEIGHT: 'md-preview-line-height',
   SEPIA: 'md-preview-sepia',
+  HEADING_SPACING: 'md-preview-heading-spacing',
   FILES: 'md-preview-files',
   ACTIVE_FILE_ID: 'md-preview-active-file-id',
   ACCENT_PRESET: 'md-preview-accent-preset',
@@ -173,6 +176,11 @@ const loadLineHeight = (): number => {
 const loadSepia = (): boolean => {
   if (typeof window === 'undefined') return false
   return localStorage.getItem(STORAGE_KEYS.SEPIA) === 'true'
+}
+
+const loadHeadingSpacing = (): number => {
+  if (typeof window === 'undefined') return 1
+  return parseFloat(localStorage.getItem(STORAGE_KEYS.HEADING_SPACING) || '1')
 }
 
 const loadAccentPreset = (): AccentPreset => {
@@ -711,6 +719,12 @@ export const useStore = create<AppStore>((set, _get) => ({
   setSepia: (enabled) => {
     localStorage.setItem(STORAGE_KEYS.SEPIA, enabled ? 'true' : 'false')
     set({ sepia: enabled })
+  },
+
+  headingSpacing: loadHeadingSpacing(),
+  setHeadingSpacing: (spacing) => {
+    localStorage.setItem(STORAGE_KEYS.HEADING_SPACING, spacing.toString())
+    set({ headingSpacing: spacing })
   },
 }))
 
