@@ -16,6 +16,7 @@ import { FindBar } from './components/FindBar'
 import { StatusBar } from './components/StatusBar'
 import { KeyboardShortcuts } from './components/KeyboardShortcuts'
 import { InstallGuide } from './components/InstallGuide'
+import { BugReportModal } from './components/BugReportModal'
 import { ColumnResizer } from './components/ColumnResizer'
 import { DropOverlay } from './components/DropOverlay'
 import { MobileTabBar } from './components/MobileTabBar'
@@ -51,6 +52,8 @@ export const App: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [showInstallGuide, setShowInstallGuide] = useState(false)
+  const [showBugReport, setShowBugReport] = useState(false)
+  const [bugScreenshot, setBugScreenshot] = useState<string | null>(null)
 
   // Sync theme class to body so body background and legacy selectors update
   useEffect(() => {
@@ -118,7 +121,7 @@ export const App: React.FC = () => {
     toggleReadingMode: () => setReadingMode(!readingMode),
     addTab: () => addFile('untitled.md'),
     toggleShortcuts: () => setShowShortcuts(!showShortcuts),
-    closeModal: () => { setShowFindBar(false); setShowShortcuts(false) },
+    closeModal: () => { setShowFindBar(false); setShowShortcuts(false); setShowBugReport(false) },
   })
 
   // Register service worker for PWA
@@ -205,6 +208,18 @@ export const App: React.FC = () => {
     }
   }
 
+  async function handleShowBugReport() {
+    try {
+      const html2canvas = (await import('html2canvas')).default
+      const appEl = document.querySelector('.app') as HTMLElement
+      const canvas = await html2canvas(appEl, { useCORS: true, scale: window.devicePixelRatio, logging: false })
+      setBugScreenshot(canvas.toDataURL('image/png'))
+    } catch {
+      setBugScreenshot(null)
+    }
+    setShowBugReport(true)
+  }
+
   return (
     <div className={`app ${isDarkMode ? 'dark-mode' : 'light-mode'} ${isMobile ? 'mobile' : ''}`}>
       <Toolbar
@@ -220,6 +235,7 @@ export const App: React.FC = () => {
         onShowFind={() => setShowFindBar(true)}
         onShowShortcuts={() => setShowShortcuts(true)}
         onShowInstallGuide={() => setShowInstallGuide(true)}
+        onShowBugReport={handleShowBugReport}
         onToggleReadingMode={() => setReadingMode(!readingMode)}
         readingMode={readingMode}
         fileName={fileName}
@@ -308,6 +324,7 @@ export const App: React.FC = () => {
 
       <KeyboardShortcuts visible={showShortcuts} onClose={() => setShowShortcuts(false)} />
       <InstallGuide visible={showInstallGuide} onClose={() => setShowInstallGuide(false)} />
+      <BugReportModal visible={showBugReport} onClose={() => setShowBugReport(false)} screenshot={bugScreenshot} />
 
       <DropOverlay visible={isDragOver} />
     </div>

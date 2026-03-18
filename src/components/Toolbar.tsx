@@ -14,6 +14,7 @@ interface ToolbarProps {
   onShowFind?: () => void
   onShowShortcuts?: () => void
   onShowInstallGuide?: () => void
+  onShowBugReport?: () => void
   onToggleReadingMode?: () => void
   readingMode?: boolean
   fileName: string
@@ -33,6 +34,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onShowFind,
   onShowShortcuts,
   onShowInstallGuide,
+  onShowBugReport,
   onToggleReadingMode,
   readingMode,
   fileName,
@@ -331,6 +333,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
         <button onClick={onShowInstallGuide} className="icon-btn" title="Install app to Home Screen / Dock">📲</button>
         <button onClick={onShowShortcuts} className="icon-btn" title="Keyboard shortcuts (?)">⌨️</button>
+        <button onClick={onShowBugReport} className="icon-btn" title="Report a bug">🐛</button>
       </div>
     </div>
   )

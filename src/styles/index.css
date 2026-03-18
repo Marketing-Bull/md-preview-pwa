@@ -1302,3 +1302,111 @@ body {
 .light-mode .json-number { color: #c2410c; }
 .light-mode .json-bool   { color: #6d28d9; }
 .light-mode .json-null   { color: #64748b; }
+
+/* ── Bug Report Modal ─────────────────────────────────────────────────── */
+.bug-report-modal {
+  max-width: 520px;
+  width: 92vw;
+}
+
+.bug-report-subtitle {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.bug-report-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.bug-report-field label,
+.bug-report-screenshot-section label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bug-report-input,
+.bug-report-textarea {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  padding: 8px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+  resize: vertical;
+}
+
+.bug-report-input:focus,
+.bug-report-textarea:focus {
+  border-color: var(--accent);
+}
+
+.bug-report-screenshot-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.bug-report-screenshot-preview {
+  width: 100%;
+  max-height: 160px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.bug-report-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.bug-report-cancel {
+  flex: 0 0 auto;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.bug-report-cancel:hover {
+  border-color: var(--accent);
+}
+
+.bug-report-submit {
+  flex: 1;
+  background: var(--accent);
+  border: none;
+  color: #000;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.bug-report-submit:hover {
+  opacity: 0.85;
+}
+
+.bug-report-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
