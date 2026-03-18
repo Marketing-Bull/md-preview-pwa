@@ -2,7 +2,7 @@ import React from 'react'
 import { useStore } from '../store'
 
 export const ReadingModeControls: React.FC = () => {
-  const { fontSize, setFontSize, lineHeight, setLineHeight, sepia, setSepia } = useStore()
+  const { fontSize, setFontSize, lineHeight, setLineHeight, sepia, setSepia, headingSpacing, setHeadingSpacing } = useStore()
 
   return (
     <div
@@ -44,6 +44,22 @@ export const ReadingModeControls: React.FC = () => {
         />
         <span style={{ fontSize: '12px', color: 'var(--text-dim)', minWidth: '35px' }}>
           {lineHeight.toFixed(1)}
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <label style={{ fontSize: '13px', color: 'var(--text-dim)' }}>Heading Spacing:</label>
+        <input
+          type="range"
+          min="0.5"
+          max="2"
+          step="0.1"
+          value={headingSpacing}
+          onChange={(e) => setHeadingSpacing(parseFloat(e.target.value))}
+          style={{ width: '100px' }}
+        />
+        <span style={{ fontSize: '12px', color: 'var(--text-dim)', minWidth: '30px' }}>
+          {headingSpacing.toFixed(1)}x
         </span>
       </div>
 

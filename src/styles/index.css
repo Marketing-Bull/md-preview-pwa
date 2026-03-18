@@ -474,7 +474,7 @@ body {
 .preview-content h1 {
   font-size: 2em;
   font-weight: 700;
-  margin: 0.5em 0 0.3em 0;
+  margin: calc(0.5em * var(--heading-spacing, 1)) 0 calc(0.3em * var(--heading-spacing, 1)) 0;
   border-bottom: 2px solid var(--accent);
   padding-bottom: 0.3em;
   color: var(--accent);
@@ -483,7 +483,7 @@ body {
 .preview-content h2 {
   font-size: 1.5em;
   font-weight: 600;
-  margin: 0.7em 0 0.3em 0;
+  margin: calc(0.7em * var(--heading-spacing, 1)) 0 calc(0.3em * var(--heading-spacing, 1)) 0;
   color: var(--accent);
 }
 

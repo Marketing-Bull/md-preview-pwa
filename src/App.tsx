@@ -38,6 +38,7 @@ export const App: React.FC = () => {
     fontSize,
     lineHeight,
     sepia,
+    headingSpacing,
     addFile,
     closeAllFiles,
     columnRatio,
@@ -242,7 +243,7 @@ export const App: React.FC = () => {
       />
 
       {readingMode ? (
-        <div className="reading-mode-container" style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight, filter: sepia ? 'sepia(0.3)' : 'none' }}>
+        <div className="reading-mode-container" style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight, filter: sepia ? 'sepia(0.3)' : 'none', ['--heading-spacing' as string]: headingSpacing }}>
           <Preview />
         </div>
       ) : isMobile ? (

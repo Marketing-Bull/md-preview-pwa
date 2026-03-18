@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "dev",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["vite", "--port", "5174"],
+      "runtimeExecutable": "/opt/homebrew/bin/node",
+      "runtimeArgs": ["/Users/olegbabenchuk/Documents/Claude/pwa/node_modules/.bin/vite", "--port", "5174"],
       "port": 5174
     }
   ]
