@@ -255,3 +255,9 @@ Every byte stays in your browser. Files are stored in `localStorage`. Nothing is
 | Sanitization | DOMPurify |
 | PDF | html2pdf.js |
 | PWA | vite-plugin-pwa + Workbox |
+
+---
+
+## License
+
+Released under the [MIT License](LICENSE). Copyright (c) 2026 Marketing Bull, LLC. All rights reserved.
